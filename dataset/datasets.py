@@ -360,7 +360,7 @@ class DataSet(object):
         self.__test = None
 
     #------------------------------------------------------------------------------------------------
-    def load(self, path="", name="", blocks=["pressure","phi_fluid", "pressure_static", "pressure_dynamic", "vel"], norm_factors={}, norm_shifts={}, files_per_batch=0, shuffle=False, validation_split=0.1, test_split=0.1, augment=False):
+    def load(self, path="", name="", blocks=["pressure","velocity", "density"], norm_factors={}, norm_shifts={}, files_per_batch=0, shuffle=False, validation_split=0.1, test_split=0.1, augment=False):
         """ 
         ## load 
         load a dataset from a directory containing a description.json and subdirectories with serialized grids.
@@ -418,7 +418,7 @@ class DataSet(object):
             return None
         if self.__val is None:
             print("Loading validation data")       
-            self.__val = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts, self.files_per_batch, self.indices[self.val_range[0]:self.val_range[1]], self.description, self.shuffle, self.augment)            
+            self.__val = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts, self.files_per_batch, self.indices[self.val_range[0]:self.val_range[1]], self.description, self.shuffle, self.augment)
         return self.__val
 
     @property
@@ -428,7 +428,7 @@ class DataSet(object):
             return None
         if self.__test is None:
             print("Loading test data")       
-            self.__test = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts, self.files_per_batch, self.indices[self.test_range[0]:self.test_range[1]], self.description, self.shuffle, self.augment)            
+            self.__test = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts, self.files_per_batch, self.indices[self.test_range[0]:self.test_range[1]], self.description, self.shuffle, self.augment)
         return self.__test
 
     #------------------------------------------------------------------------------------------------
@@ -573,7 +573,7 @@ class DataBlock(object):
         print("Saved data block {} to file {}".format(self.data.shape, file_path))
 
     #------------------------------------------------------------------------------------------------
-    def normalize(self, shift = 0.0, factor = None, percentile = None, max = False, verbose=True):
+    def normalize(self, shift = 0.0, factor = None, percentile = None, max = False, verbose=True, std= None):
         """ normalization of the data block. use a precomputed normalization factor instead of percentile argument to speed up normalization"""
         if max:
             if verbose:
@@ -583,6 +583,7 @@ class DataBlock(object):
             if verbose:
                 print("Normalizing with factor.", end=' ')
             self._normalization_factor = factor
+            self._normalization_shift = shift
         elif percentile is not None:
             assert False, "Percentile is still used. Report to Steffen."
             print("Normalizing with {:4.2f}th percentile.".format(percentile), end = ' ')
@@ -591,15 +592,17 @@ class DataBlock(object):
             self._normalization_factor = 1.0
 
         if verbose:
-            print(" Factor: {}".format(self._normalization_factor))
+            print(" Factor: {} Shift: {}".format(self._normalization_factor, self._normalization_shift))
 
-        self.data -= self._normalization_shift
+        self.data += self._normalization_shift
         self.data /= self._normalization_factor
     
     #------------------------------------------------------------------------------------------------
     def denormalize(self):
         self.data *= self._normalization_factor
+        self.data -= self.normalization_shift
         self._normalization_factor = 1.0
+        self._normalization_shift = 0.0
 
     #------------------------------------------------------------------------------------------------
     @property
@@ -631,16 +634,14 @@ class DataBlock(object):
 
     #------------------------------------------------------------------------------------------------
     def print_data_properties(self):
-        percentile_99th = np.percentile(self.data, 99.0)
-        percentile_99_9th = np.percentile(self.data, 99.9)
         average = np.average(self.data)
         max_val = np.max(self.data)
         min_val = np.min(self.data)
         print("\tMin: {}".format(min_val))
         print("\tMax: {}".format(max_val))
         print("\tAvg: {}".format(average))
-        print("\t99th Percentile: {}".format(percentile_99th))
-        print("\t99.9th Percentile: {}".format(percentile_99_9th))
+        print("\tMean: {}".format(np.mean(self.data)))
+        print("\tSTD: {}".format(np.std(self.data)))
 
 def read_scenes(scene_path, max_samples = -1, size = None, scene_length = 1000):
     return SceneList.from_data(scene_path = scene_path, max_samples = max_samples, size = size, scene_length = scene_length).scenes

@@ -24,7 +24,8 @@ import inspect
 
 import numpy as np
 import tensorflow as tf
-from keras import backend as K
+from tensorflow.python.keras import backend as K
+import tensorflow.python.keras as k
 
 class Network(ABC):
     """ Superclass for all model architectures """
@@ -48,7 +49,7 @@ class Network(ABC):
         tf.set_random_seed(3742)
 
         # Destroys the current TF graph and creates a new one.
-        # Useful to avoid clutter from old models / layers.
+        # Useful to avoid clutter from old models / extensions.
         if self.model is not None:
             del self.model
             self.model = None
@@ -64,6 +65,10 @@ class Network(ABC):
         # Train and return History
         history = self._train(epochs, **kwargs)
         return history
+
+    #---------------------------------------------------------------------------------
+    def save_model(self, path):
+        k.models.save_model(self.model, path + "/model.h5")
 
     #---------------------------------------------------------------------------------
     # Interface
@@ -94,7 +99,7 @@ class Network(ABC):
         return
     #---------------------------------------------------------------------------------
     @abstractmethod
-    def predict(self, X, batch_size):
+    def predict(self, x, batch_size):
         """ Predict the results of X using the compiled model and return the result """
         return
 
