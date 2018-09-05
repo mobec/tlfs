@@ -407,7 +407,7 @@ class DataSet(object):
             raise RuntimeError("Dataset was not split for training data, but training data was requested")
             return None
         if self.__train is None:
-            print("Loading training data")
+            print("Loading training data ({} Scenes)".format(self.train_range[1]-self.train_range[0]))
             self.__train = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts, self.files_per_batch, self.indices[self.train_range[0]:self.train_range[1]], self.description, self.shuffle, self.augment)
         return self.__train
 
@@ -417,7 +417,7 @@ class DataSet(object):
             raise RuntimeError("Dataset was not split for validation data, but validation data was requested")
             return None
         if self.__val is None:
-            print("Loading validation data")       
+            print("Loading validation data ({} Scenes)".format(self.val_range[1]-self.val_range[0]))
             self.__val = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts, self.files_per_batch, self.indices[self.val_range[0]:self.val_range[1]], self.description, self.shuffle, self.augment)
         return self.__val
 
@@ -427,7 +427,7 @@ class DataSet(object):
             raise RuntimeError("Dataset was not split for test data, but test data was requested")
             return None
         if self.__test is None:
-            print("Loading test data")       
+            print("Loading test data ({} Scenes)".format(self.test_range[1]-self.test_range[0]))
             self.__test = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts, self.files_per_batch, self.indices[self.test_range[0]:self.test_range[1]], self.description, self.shuffle, self.augment)
         return self.__test
 

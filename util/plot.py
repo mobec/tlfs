@@ -249,7 +249,7 @@ class Plotter(object):
         self._figures.append(fig)
 
     #---------------------------------------------------------------------------------
-    def plot_history(self, history, lim_x=None, lim_y=None):
+    def plot_history(self, history, lim_x=None, lim_y=None, log_y=False):
         # e.g. history = dict_keys(['loss', 'val_loss', 'val_mean_squared_error', 'val_mean_absolute_error', 'mean_squared_error', 'mean_absolute_error'])
         keys = history.keys()
         key_pairs = list()
@@ -268,6 +268,8 @@ class Plotter(object):
                 ax.set_xlim(lim_x[0], lim_x[1])
             if lim_y is not None:
                 ax.set_ylim(lim_y[0], lim_y[1])
+            if log_y:
+                ax.set_yscale('log')
             #plt.title("Model Loss")
             ax.set_ylabel(B.replace("_", " ").title())
             ax.set_xlabel("Epoch")
