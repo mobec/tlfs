@@ -119,18 +119,18 @@ class Autoencoder(Network):
             vgg19_layer_idx += 2
             model_layer_idx += 1
 
-        # decoder weights
-        model_layer_idx = len(self.model.layers) - 1 # skip uppermost convolution
-        vgg19_layer_idx = 0
-        for _ in range(8):
-            # search for the next conv2d transposed layer
-            while not self.model.layers[model_layer_idx].get_weights():
-                model_layer_idx -= 1
-            # set weights from vgg
-            conv2d_T_weights = [vgg19_weights[vgg19_layer_idx], vgg19_weights[vgg19_layer_idx + 1][:self.model.layers[model_layer_idx].get_weights()[1].shape[0]]]
-            self.model.layers[model_layer_idx].set_weights(conv2d_T_weights)
-            vgg19_layer_idx += 2
-            model_layer_idx -= 1
+        # # decoder weights
+        # model_layer_idx = len(self.model.layers) - 1 # skip uppermost convolution
+        # vgg19_layer_idx = 0
+        # for _ in range(8):
+        #     # search for the next conv2d transposed layer
+        #     while not self.model.layers[model_layer_idx].get_weights():
+        #         model_layer_idx -= 1
+        #     # set weights from vgg
+        #     conv2d_T_weights = [vgg19_weights[vgg19_layer_idx], vgg19_weights[vgg19_layer_idx + 1][:self.model.layers[model_layer_idx].get_weights()[1].shape[0]]]
+        #     self.model.layers[model_layer_idx].set_weights(conv2d_T_weights)
+        #     vgg19_layer_idx += 2
+        #     model_layer_idx -= 1
 
     def _compile_model(self):
         self.model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
