@@ -41,124 +41,8 @@ def get_dataset_root(name="", path=""):
     assert os.path.isfile(dataset_root + "/description.json"), ("The dataset does not contain a description.json")
     return dataset_root
 
-#====================================================================================================
-class SceneList(object):
-    #------------------------------------------------------------------------------------------------
-    # add data in format (scene_count, scene_size, ...)
-    def __init__(self, data, scene_size, version, date, name, seed, test_split=0.1):
-        self.data = data
-        self.scene_size = scene_size
-        self.version = version
-        self.date = date
-        self.name = name
-        self.seed = seed
-        self.test_split = test_split
-        self.num_scenes = len(self.data)
-        self.norm_factor = 1.0
-        self.norm_shift = 0.0
-
-        self.train_range = (0, self.num_scenes - int(self.num_scenes * self.test_split))
-        self.test_range = (self.train_range[1], self.num_scenes)
-
-    #------------------------------------------------------------------------------------------------
-    @property
-    def train(self):
-        return self.data[self.train_range[0]:self.train_range[1]]
-
-    #------------------------------------------------------------------------------------------------
-    @property
-    def test(self):
-        return self.data[self.test_range[0]:self.test_range[1]]
-
-    #------------------------------------------------------------------------------------------------
-    @property
-    def train_length(self):
-        return self.train_range[1] - self.train_range[0]
-
-    #------------------------------------------------------------------------------------------------
-    @property
-    def test_length(self):
-        return self.test_range[1] - self.test_range[0]
-
-    #------------------------------------------------------------------------------------------------
-    @classmethod
-    def load(cls, file_name, dataset_name="", dataset_path="", test_split=0.1):
-        dataset_root = get_dataset_root(dataset_name, dataset_path)
-        loaded_npz = np.load(dataset_root + "/" + file_name)
-
-        assert loaded_npz["data"] is not None, ("Can not load data!")
-        data = loaded_npz["data"]
-
-        header = None
-        if "header" in loaded_npz.keys():
-            header = loaded_npz["header"]
-        if header is not None:
-            header = header[()]
-
-        scene_size = header.get("scene_size", 0)
-        version = header.get("version", 0)
-        date = header.get("date", None)
-        name = header.get("name", None)
-        seed = header.get("seed", 0)
-
-        return SceneList(data, scene_size, version, date, name, seed, test_split)
-
-    #------------------------------------------------------------------------------------------------
-    def get_train_sample(self, index):
-        return self.train[index]
-
-    #------------------------------------------------------------------------------------------------
-    def get_test_sample(self, index):
-        return self.test[index]
-
-    #------------------------------------------------------------------------------------------------
-    def serialize(self, dataset_name="", dataset_path=""):
-        dataset_root = get_dataset_root(name=dataset_name, path=dataset_path)
-        file_path = dataset_root + "/" + self.name + ".npz"
-        header = {
-            "scene_size": self.scene_size,
-            "version": self.version,
-            "date": self.date,
-            "name": self.name,
-            "seed": self.seed
-        }
-        norm_factor = self.norm_factor
-        norm_shift = self.norm_shift
-        self.denormalize()
-        np.savez_compressed(file_path, data=self.data, header=header)
-        self.normalize(norm_factor, norm_shift)
-
-        file_path = Path(file_path).resolve()
-        print("Saved data block {} to file {}".format(self.data.shape, file_path))
-
-    #------------------------------------------------------------------------------------------------
-    def save_histogram(self, path="."):
-        import matplotlib.pyplot as plt
-        data = self.data.flatten()
-        fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure & 1 axis
-        ax.hist(data, range=(-np.percentile(-data, 99.9), np.percentile(data, 99.9)), bins='auto')  # plt.hist passes it's arguments to np.histogram
-        ax.set_title("Code Layer Domain")
-        ax.grid()
-        fig.savefig(path)   # save the figure to file
-        plt.close(fig)
-
-    #------------------------------------------------------------------------------------------------
-    def normalize(self, factor, shift=0.0):
-        print("Normalizing with factor {} and shift {}".format(factor, shift))
-        self.norm_factor = factor
-        self.norm_shift = shift
-        self.data -= self.norm_shift
-        self.data /= self.norm_factor
-
-    #------------------------------------------------------------------------------------------------
-    def denormalize(self):
-        self.data *= self.norm_factor
-        self.data += self.norm_shift
-        self.norm_factor = 1.0
-        self.norm_shift = 0.0
 
 #------------------------------------------------------------------------------------------------
-
 class DataSubSet(object):
     """ 
     should contain either train, validation or test data
@@ -305,6 +189,7 @@ class DataSubSet(object):
                 X = []
                 for block in inputs:
                     batch_original = self.__getattribute__(block)[index_in_chunk:(index_in_chunk + used_data_size)]
+                    print(len(batch_original.shape))
                     batch_flipped_x = np.flip(batch_original, axis=2)
                     if(self.description["dimension"] == 3):
                         batch_flipped_z = np.flip(batch_original, axis=0)
@@ -643,8 +528,6 @@ class DataBlock(object):
         print("\tMean: {}".format(np.mean(self.data)))
         print("\tSTD: {}".format(np.std(self.data)))
 
-def read_scenes(scene_path, max_samples = -1, size = None, scene_length = 1000):
-    return SceneList.from_data(scene_path = scene_path, max_samples = max_samples, size = size, scene_length = scene_length).scenes
 
 if __name__ == "__main__":
     import argparse

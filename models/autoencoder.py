@@ -1,3 +1,24 @@
+###############################################################################
+#
+#   Copyright 2018 Moritz Becher
+#
+#   abstract network layout class
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+###############################################################################
+
+
 import tensorflow as tf
 from tensorflow.python import keras as k
 import extensions as e
@@ -64,14 +85,14 @@ class Autoencoder(Network):
         # ----------------------------------------------------------------------------------
         h = k.layers.Conv2D(256, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
-        # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(256, (3, 3), padding='same')(h)
-        h = k.layers.Activation('relu')(h)
-
-
-        # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(256, (3, 3), padding='same')(h)
-        h = k.layers.Activation('relu')(h)
+        # # # ----------------------------------------------------------------------------------
+        # # h = k.layers.Conv2D(256, (3, 3), padding='same')(h)
+        # # h = k.layers.Activation('relu')(h)
+        #
+        #
+        # # # ----------------------------------------------------------------------------------
+        # # h = k.layers.Conv2DTranspose(256, (3, 3), padding='same')(h)
+        # # h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.Conv2DTranspose(256, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
@@ -106,21 +127,21 @@ class Autoencoder(Network):
         vgg19 = k.applications.vgg19.VGG19(include_top=False, weights='imagenet', input_tensor=None, input_shape=self.input_shape, pooling=None, classes=1000)
         vgg19_weights = vgg19.get_weights()
 
-        model_layer_idx = 0
-        vgg19_layer_idx = 0
-        # encoder weights
-        for _ in range(8):
-            # search for the next conv2d layer
-            while not self.model.layers[model_layer_idx].get_weights():
-                model_layer_idx += 1
-            # set weights from vgg
-            conv2d_weights = [vgg19_weights[vgg19_layer_idx], vgg19_weights[vgg19_layer_idx + 1]]
-            self.model.layers[model_layer_idx].set_weights(conv2d_weights)
-            vgg19_layer_idx += 2
-            model_layer_idx += 1
-
+        # model_layer_idx = 0
+        # vgg19_layer_idx = 0
+        # # encoder weights
+        # for _ in range(8):
+        #     # search for the next conv2d layer
+        #     while not self.model.layers[model_layer_idx].get_weights():
+        #         model_layer_idx += 1
+        #     # set weights from vgg
+        #     conv2d_weights = [vgg19_weights[vgg19_layer_idx], vgg19_weights[vgg19_layer_idx + 1]]
+        #     self.model.layers[model_layer_idx].set_weights(conv2d_weights)
+        #     vgg19_layer_idx += 2
+        #     model_layer_idx += 1
+        #
         # # decoder weights
-        # model_layer_idx = len(self.model.layers) - 1 # skip uppermost convolution
+        # model_layer_idx = len(self.model.layers) - 1
         # vgg19_layer_idx = 0
         # for _ in range(8):
         #     # search for the next conv2d transposed layer
@@ -136,6 +157,9 @@ class Autoencoder(Network):
         self.model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
 
     def _train(self, epochs, **kwargs):
+        if epochs == 0:
+            return None
+
         dataset = kwargs["dataset"]
         batch_size = kwargs.get("batch_size", 32)
         augment = kwargs.get("augment", False)
