@@ -63,19 +63,21 @@ def __split_by_channels(a: np.ndarray, channel_axis: int=-1) -> list:
     return np.split(a, a.shape[channel_axis], channel_axis)
 
 
-def rotate90(data: np.ndarray, axes: Tuple) -> np.ndarray:
+def rotate90(data: np.ndarray, axes: Tuple, k: int = 1) -> np.ndarray:
     """
     rotate the frame by 90 degrees from the first axis counterclockwise to the second
         axes: 2 int, from axis to axis; see np.rot90
             0,1,2 -> z,y,x
     :param data: an array of data
     :param axes: axes of the plane of rotation
+    :param k: number of times the rotation is performed (can be negative)
     :return: rotated array
     """
     if len(axes) != 2:
         raise ValueError('need 2 axes for rotate90.')
+    axes = [x + 1 for x in axes]
 
-    data = np.rot90(data, axes=axes)
+    data = np.rot90(data, k=k, axes=axes)
 
     if __is_vector_field(data):
         data = __rotate90_vectors(data, axes)
@@ -208,7 +210,7 @@ def __scale_vectors(data: np.ndarray, factor: int, channel_layout: list=None) ->
     return np.concatenate(channels, -1)
 
 
-def random_tile(a: np.ndarray, shape: Tuple) -> np.ndarray:
+def random_tile(a: np.ndarray, shape: Tuple, seed: int) -> np.ndarray:
     """
     Select a random tile with specified shape out of the input.
     :param a: The input array
@@ -220,6 +222,7 @@ def random_tile(a: np.ndarray, shape: Tuple) -> np.ndarray:
     dimensions = __dim(a)
     window_max_start = np.array(__resolution(a)) - np.array(shape)
     window_min_start = np.array([0] * dimensions)
+    np.random.seed(seed)
     low = np.array([np.random.randint(min, max, a.shape[0]) for min, max in zip(window_min_start, window_max_start)]).T
     high = low + np.array(shape, dtype=int)
 

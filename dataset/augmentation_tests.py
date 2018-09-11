@@ -38,16 +38,16 @@ class TestAugmentation(unittest.TestCase):
     def test_rotate90(self):
         # Three dimensions
         x = np.random.rand(4, 32, 32, 32, 3)
-        y = aug.rotate90(x, axes=(1, 2))
+        y = aug.rotate90(x, axes=(0, 1), k=1)
         self.assertFalse(np.allclose(x, y))
-        y = aug.rotate90(y, axes=(2, 1))
+        y = aug.rotate90(y, axes=(1, 0), k=1)
         self.assertTrue(np.allclose(x, y))
 
         # Two dimensions
         x = np.random.rand(4, 32, 32, 3)
-        y = aug.rotate90(x, axes=(1, 2))
+        y = aug.rotate90(x, axes=(0, 1), k=1)
         self.assertFalse(np.allclose(x, y))
-        y = aug.rotate90(y, axes=(2, 1))
+        y = aug.rotate90(y, axes=(1, 0), k=1)
         self.assertTrue(np.allclose(x, y))
 
     def test_flip(self):
@@ -75,9 +75,10 @@ class TestAugmentation(unittest.TestCase):
 
     def test_random_tile(self):
         x = np.random.rand(3, 32, 32, 3)
-        y = aug.random_tile(x, shape=(8, 8))
-        self.assertTrue(y.shape == (3, 8, 8, 3))
-
+        y = aug.random_tile(x, shape=(8, 8), seed=1337)
+        self.assertEqual(y.shape, (3, 8, 8, 3))
+        y_check = aug.random_tile(x, shape=(8,8), seed=1337)
+        self.assertTrue(np.allclose(y, y_check))
 
 if __name__ == '__main__':
     unittest.main()

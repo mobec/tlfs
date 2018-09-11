@@ -270,7 +270,6 @@ class Plotter(object):
                 ax.set_ylim(lim_y[0], lim_y[1])
             if log_y:
                 ax.set_yscale('log')
-            #plt.title("Model Loss")
             ax.set_ylabel(B.replace("_", " ").title())
             ax.set_xlabel("Epoch")
             ax.xaxis.set_major_locator(MaxNLocator(integer=True)) # force integer values on epoch axis

@@ -27,9 +27,11 @@ from pathlib import Path
 import glob
 from datetime import datetime
 import json
+import random
 
 from util import filesystem
 from util import console
+from dataset import augmentation
 
 def get_dataset_root(name="", path=""):
     assert name or path, ("Must provide either a path to the dataset or the name of the dataset, in which case load will try to find the dataset")
@@ -155,9 +157,9 @@ class DataSubSet(object):
     #------------------------------------------------------------------------------------------------
     def steps_per_epoch(self, batch_size, augment=False):
         """ number of batches to train on. can be used in fit_generator """
-        augmentation_multiplier = 2
+        augmentation_multiplier = 6
         if(self.description["dimension"] == 3):
-            augmentation_multiplier = 4
+            augmentation_multiplier = 13
 
         augmentation_multiplier = augmentation_multiplier if augment else 1
         return int(self.num_frames / batch_size) * augmentation_multiplier
@@ -179,46 +181,66 @@ class DataSubSet(object):
             # TODO: check why augmentation is also implemented in the generator....
             if augment:
                 if(self.description["dimension"] == 3):
-                    assert batch_size % 4 == 0, ("Batch size must be divisible by 4 when augmentation is active")
-                    used_data_size = batch_size // 4
+                    assert batch_size % 13 == 0, ("Batch size must be divisible by 4 when augmentation is active")
+                    used_data_size = batch_size // 13
                 else:
-                    assert batch_size % 2 == 0, ("Batch size must be divisible by 2 when augmentation is active")
-                    used_data_size = batch_size // 2
+                    assert batch_size % 6 == 0, ("Batch size must be divisible by 6 when augmentation is active")
+                    used_data_size = batch_size // 6
+
+                def augment(batch_original: np.ndarray, seed: int) -> np.ndarray:
+                    batch_original = augmentation.random_tile(batch_original, shape=(32, 32), seed=seed)
+                    batch = [batch_original]
+                    # TODO: generate all possible augmentations
+                    # rotate
+                    batch.append(augmentation.rotate90(batch_original, axes=(0, 1), k=1))
+                    batch.append(augmentation.rotate90(batch_original, axes=(0, 1), k=2))
+                    batch.append(augmentation.rotate90(batch_original, axes=(0, 1), k=3))
+                    if self.description["dimension"] == 3:
+                        batch.append(augmentation.rotate90(batch_original, axes=(1, 2), k=1))
+                        batch.append(augmentation.rotate90(batch_original, axes=(1, 2), k=2))
+                        batch.append(augmentation.rotate90(batch_original, axes=(1, 2), k=3))
+
+                        batch.append(augmentation.rotate90(batch_original, axes=(2, 0), k=1))
+                        batch.append(augmentation.rotate90(batch_original, axes=(2, 0), k=2))
+                        batch.append(augmentation.rotate90(batch_original, axes=(2, 0), k=3))
+                    # flip
+                    batch.append(augmentation.flip(batch_original, axes=(0,)))
+                    batch.append(augmentation.flip(batch_original, axes=(1,)))
+                    if self.description["dimension"] == 3:
+                        batch.append(augmentation.flip(batch_original, axes=(2,)))
+
+                    return np.concatenate(batch, axis=0)
 
                 # Input generation -> numpy ordering: zyx (!)
+                seed = random.randint(0, 5000)
                 X = []
                 for block in inputs:
                     batch_original = self.__getattribute__(block)[index_in_chunk:(index_in_chunk + used_data_size)]
-                    print(len(batch_original.shape))
-                    batch_flipped_x = np.flip(batch_original, axis=2)
-                    if(self.description["dimension"] == 3):
-                        batch_flipped_z = np.flip(batch_original, axis=0)
-                        batch_flipped_xz = np.flip(batch_flipped_x, axis=0)
-                        batch = np.concatenate([batch_original, batch_flipped_x, batch_flipped_z, batch_flipped_xz], axis=0)
-                    else:
-                        batch = np.concatenate([batch_original, batch_flipped_x], axis=0)
-
-                    if noise:
-                        noise_data = np.random.normal(loc=0.0, scale=0.01, size=batch.shape)
-                        batch += noise_data
-                        # noise_sample_ts = random.randint(0, self.time_steps-1)
-                        # np_sample_ts = np.random.choice(np.array([True,False]), self.time_steps, p=[self.noise_probability,1.0-self.noise_probability]) # e.g. [True, False, False, False, ...]
-                        # np_batch_mask = np.random.choice(np.array([True,False]), self.batch_size) # e.g. [True, False, False, False, ...]
-                        # input_noise = np.random.uniform(low=-1.0, high=1.0, size=X[0, 0].shape) * np.std(X[random.randint(0, self.batch_size-1), noise_sample_ts]) * 0.5
-                        # X[np.ix_(np_batch_mask, np_sample_ts)] += input_noise
+                    batch = augment(batch_original, seed)
+                    # print(len(batch_original.shape))
+                    # batch_flipped_x = np.flip(batch_original, axis=2)
+                    # if(self.description["dimension"] == 3):
+                    #     batch_flipped_z = np.flip(batch_original, axis=0)
+                    #     batch_flipped_xz = np.flip(batch_flipped_x, axis=0)
+                    #     batch = np.concatenate([batch_original, batch_flipped_x, batch_flipped_z, batch_flipped_xz], axis=0)
+                    # else:
+                    #     batch = np.concatenate([batch_original, batch_flipped_x], axis=0)
+                    #
+                    # if noise:
+                    #     noise_data = np.random.normal(loc=0.0, scale=0.01, size=batch.shape)
+                    #     batch += noise_data
+                    #     # noise_sample_ts = random.randint(0, self.time_steps-1)
+                    #     # np_sample_ts = np.random.choice(np.array([True,False]), self.time_steps, p=[self.noise_probability,1.0-self.noise_probability]) # e.g. [True, False, False, False, ...]
+                    #     # np_batch_mask = np.random.choice(np.array([True,False]), self.batch_size) # e.g. [True, False, False, False, ...]
+                    #     # input_noise = np.random.uniform(low=-1.0, high=1.0, size=X[0, 0].shape) * np.std(X[random.randint(0, self.batch_size-1), noise_sample_ts]) * 0.5
+                    #     # X[np.ix_(np_batch_mask, np_sample_ts)] += input_noise
                     X.append(batch)
 
                 # Output generation
                 Y = []
                 for block in outputs:
                     batch_original = self.__getattribute__(block)[index_in_chunk:(index_in_chunk + used_data_size)]
-                    batch_flipped_x = np.flip(batch_original, axis=2)
-                    if(self.description["dimension"] == 3):
-                        batch_flipped_z = np.flip(batch_original, axis=0)
-                        batch_flipped_xz = np.flip(batch_flipped_x, axis=0)
-                        batch = np.concatenate([batch_original, batch_flipped_x, batch_flipped_z, batch_flipped_xz], axis=0)
-                    else:
-                        batch = np.concatenate([batch_original, batch_flipped_x], axis=0)
+                    batch = augment(batch_original, seed)
                     Y.append(batch)
             else:
                 used_data_size = batch_size
@@ -278,7 +300,6 @@ class DataSet(object):
         
         # split the dataset into train, val and test
         self.train_range, self.val_range, self.test_range = self._get_ranges(self.num_files, validation_split, test_split)
-        
         if self.train_range[0] == self.train_range[1]:
             print("[WARNING] Dataset was not split for training data")
         if self.val_range[0] == self.val_range[1]:
