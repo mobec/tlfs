@@ -8,9 +8,9 @@
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
-# 
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #   Unless required by applicable law or agreed to in writing, software
 #   distributed under the License is distributed on an "AS IS" BASIS,
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,12 +63,18 @@ class Network(ABC):
         self.model.summary()
         self.print_attributes()
         # Train and return History
-        history = self._train(epochs, **kwargs)
-        return history
+        if epochs != 0:
+            history = self._train(epochs, **kwargs)
+            return history
+        return None
 
     #---------------------------------------------------------------------------------
     def save_model(self, path):
         k.models.save_model(self.model, path + "/model.h5")
+
+    #---------------------------------------------------------------------------------
+    def load_model(self, path):
+        self.model = k.models.load_model(path + "/model.h5")
 
     #---------------------------------------------------------------------------------
     # Interface

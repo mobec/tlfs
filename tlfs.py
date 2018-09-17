@@ -49,33 +49,37 @@ np.random.seed(4)
 # img = k.preprocessing.image.array_to_img(y)
 # k.preprocessing.image.save_img("/home/mob/Desktop/ones.jpg", img)
 
-normalization_factor = 3.172111148032056 * 3.0 # Two sigma deviation
-normalization_factor *= 2.0 / 255.0 #  caffe style scaling to R8G8B8 (-128, 127)
+normalization_factor = np.array([3.94457719, 4.94287727, 1.        ]) * 3.0 #3.172111148032056 * 2.0 # Two sigma deviation
+normalization_factor *= 1.0 / 255.0 #  caffe style scaling to R8G8B8 (-128, 127)
 normalization_shift = np.array([0., 0.,  0.])#np.array([0.02614982, 0.11674846,  0.        ]) # negative mean
 
 dataset = DataSet()
-dataset.load(path="/home/mob/Desktop/Dataset", blocks=["velocity"], shuffle=True, norm_factors={"velocity": normalization_factor}, norm_shifts={"velocity": normalization_shift})
+dataset.load(path="/home/mob/Desktop/Dataset", blocks=["velocity"], shuffle=False, norm_factors={"velocity": normalization_factor}, norm_shifts={"velocity": normalization_shift})
 dataset.train.velocity.print_data_properties()
+
+hist = {}
+
 ae = Autoencoder(input_shape=(None, None, 3))
-hist = ae.train(20, dataset=dataset, batch_size=36,  augment=True)
+#ae.load_model(path="/home/mob/Desktop")
+
+hist = ae.train(1, dataset=dataset, batch_size=36,  augment=False)
 ae.save_model(path="/home/mob/Desktop")
 if hist:
     with open("/home/mob/Desktop/hist.json", 'w') as f:
         json.dump(hist.history, f)
-# 11.6532
 
 plot = Plotter()
 orig = dataset.test.velocity
-pred = ae.predict(orig, batch_size=8)
+pred = ae.predict(orig.data, batch_size=8)
 orig.denormalize()
 orig.print_data_properties()
 pred *= normalization_factor
 pred -= normalization_factor
-plot.plot_vector_field(orig[50], pred[50], title="Comp", scale=300.0)
+plot.plot_vector_field(orig.data[50], pred[50], title="Comp", scale=300.0)
 
-plot.plot_vector_field(orig[150], pred[150], title="Comp", scale=300.0)
+plot.plot_vector_field(orig.data[150], pred[150], title="Comp", scale=300.0)
 
-plot.plot_vector_field(orig[250], pred[250], title="Comp", scale=300.0)
+plot.plot_vector_field(orig.data[250], pred[250], title="Comp", scale=300.0)
 
 if hist:
     plot.plot_history(hist.history, log_y=True)

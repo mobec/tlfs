@@ -40,7 +40,7 @@ class Autoencoder(Network):
         self.init_func = "glorot_normal"
         self.adam_epsilon = None #1e-8 # 1e-3
         self.adam_learning_rate = 0.0001 # higher values tend to overshoot in the beginning
-        self.adam_weight_decay = 0.0#0.005#1e-5
+        self.adam_weight_decay = 0.005#1e-5
         self.input_shape = kwargs.get("input_shape", (64, 64, 64, 1))
         self.loss = "mse"
         self.metrics = ["mae"]
@@ -59,31 +59,31 @@ class Autoencoder(Network):
         # ----------------------------------------------------------------------------------
         x = k.layers.Input(shape=self.input_shape)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(64,  (3, 3), padding='same')(x)
+        h = k.layers.Conv2D(64,  (3, 3), padding='same', trainable=True)(x)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(64, (3, 3), padding='same')(h)
+        h = k.layers.Conv2D(64, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.MaxPool2D((2,2))(h)
 
         #----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(128, (3, 3), padding='same')(h)
+        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(128, (3, 3), padding='same')(h)
+        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.MaxPool2D((2, 2))(h)
 
         #----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(256, (3, 3), padding='same')(h)
+        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(256, (3, 3), padding='same')(h)
+        h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(256, (3, 3), padding='same')(h)
+        h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # # ----------------------------------------------------------------------------------
         # h = k.layers.Conv2D(256, (3, 3), padding='same')(h)
@@ -115,7 +115,7 @@ class Autoencoder(Network):
 
         #----------------------------------------------------------------------------------
         #h = e.layers.InvMaxPool2D((2, 2))(h)
-        h = k.layers.UpSampling2D((2,2))(h)
+        h = k.layers.UpSampling2D((2, 2))(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.Conv2DTranspose(64, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
@@ -136,7 +136,7 @@ class Autoencoder(Network):
         model_layer_idx = 0
         vgg19_layer_idx = 0
         # encoder weights
-        for _ in range(8):
+        for _ in range(0):
             # search for the next conv2d layer
             while not self.model.layers[model_layer_idx].get_weights():
                 model_layer_idx += 1
@@ -154,7 +154,7 @@ class Autoencoder(Network):
         # decoder weights
         model_layer_idx = len(self.model.layers) - 1
         vgg19_layer_idx = 0
-        for _ in range(8):
+        for _ in range(0):
             # search for the next conv2d transposed layer
             while not self.model.layers[model_layer_idx].get_weights():
                 model_layer_idx -= 1
@@ -197,5 +197,5 @@ class Autoencoder(Network):
         return hist
 
     def predict(self, x, batch_size):
-        return self.model.predict(x.data, batch_size=batch_size)
+        return self.model.predict(x, batch_size=batch_size)
 
