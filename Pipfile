@@ -1,0 +1,12 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+tensorflow = {path = "/Users/mob/Desktop/tensorflow-1.10.0-cp37-cp37m-macosx_10_13_x86_64.whl"}
+
+[dev-packages]
+
+[requires]
+python_version = "3.7"
