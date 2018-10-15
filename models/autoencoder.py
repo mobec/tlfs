@@ -171,14 +171,14 @@ class Autoencoder(Network):
         model_layer_idx = 0
         vgg19_layer_idx = 0
         # encoder weights
-        for _ in range(6):
+        for i in range(6):
             # search for the next conv2d layer
             while not self.model.layers[model_layer_idx].get_weights():
                 model_layer_idx += 1
             # set weights from vgg
             weights = vgg19_weights[vgg19_layer_idx]
             print(weights.shape)
-            weights = weights / np.sum(weights)
+            weights = weights / vgg_layer_scales[i]
             biases = vgg19_weights[vgg19_layer_idx + 1]
             #biases = biases / np.sum(biases)
             conv2d_weights = [weights, biases]
@@ -189,13 +189,13 @@ class Autoencoder(Network):
         # decoder weights
         model_layer_idx = len(self.model.layers) - 1
         vgg19_layer_idx = 0
-        for _ in range(6):
+        for i in range(6):
             # search for the next conv2d transposed layer
             while not self.model.layers[model_layer_idx].get_weights():
                 model_layer_idx -= 1
             # set weights from vgg
             weights = vgg19_weights[vgg19_layer_idx]
-            weights = weights / np.sum(weights)
+            weights = weights / vgg_layer_scales[i]
             biases = vgg19_weights[vgg19_layer_idx + 1][:self.model.layers[model_layer_idx].get_weights()[1].shape[0]]
             #biases = biases / np.sum(biases)
             conv2d_T_weights = [weights, biases]
