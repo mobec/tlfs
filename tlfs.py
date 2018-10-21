@@ -80,7 +80,7 @@ if __name__ == '__main__':
     plot = Plotter()
 
     if args.train:
-        hist = train_tlfs(args.dataset, args.model, 1)
+        hist = train_tlfs(args.dataset, args.model, 50)
         if hist:
             with open(args.output + "/hist.json", 'w') as f:
                 json.dump(hist.history, f)
