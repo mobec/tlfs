@@ -67,12 +67,12 @@ if __name__ == '__main__':
     import json
 
     parser = argparse.ArgumentParser(description="Train the tlfs model")
-    parser.add_argument("-o", "--output", type=str, help="The output path")
-    parser.add_argument("-d", "--dataset", type=str, help="The dataset path")
+    parser.add_argument("-o", "--output", type=str, required=True, help="The output path")
+    parser.add_argument("-d", "--dataset", type=str, required=True, help="The dataset path")
     parser.add_argument("--train", action="store_true", help="Train the model")
     parser.add_argument("--test", action="store_true", help="Test the model")
     parser.add_argument("--gui", action="store_true", help="Test the model")
-    parser.add_argument("model", type=str, help="The path to the model file (.h5)")
+    parser.add_argument("model", type=str, required=True, help="The path to the model file (.h5)")
     args = parser.parse_args()
 
     os.makedirs(args.output, exist_ok=True)
