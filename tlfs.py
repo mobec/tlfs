@@ -21,67 +21,80 @@
 from dataset.datasets import DataSet
 from models.autoencoder import Autoencoder
 from util.plot import Plotter
-import json
 
 import numpy as np
 np.random.seed(4)
 
+normalization_factor = np.array([3.94457719, 4.94287727, 1.]) * 3.0  # 3.172111148032056 * 2.0 # Two sigma deviation
+normalization_factor *= 1.0 / 255.0  # caffe style scaling to R8G8B8 (-128, 127)
+normalization_shift = np.array([0., 0., 0.])  # np.array([0.02614982, 0.11674846,  0.        ]) # negative mean
 
-# from tensorflow.python import keras as k
-#
-#
-# # img = k.preprocessing.image.load_img("/home/mob/Desktop/elephant.jpg", target_size=(224, 224))
-# # x = k.preprocessing.image.img_to_array(img)
-# x = np.ones((224, 224, 3)) * 255.0
-# x = np.expand_dims(x, axis=0)
-# x = k.applications.vgg19.preprocess_input(x)
-#
-# print(np.mean(x, axis=(0, 1, 2)))
-#
-# ae = Autoencoder(input_shape=(224, 224, 3))
-# ae.train(0)
-# y = ae.model.predict(x)
-#
-# print(np.mean(y, axis=(0, 1, 2)))
-#
-# #y += np.array([103.939, 116.779, 123.68])
-# y = np.squeeze(y, axis=0)
-# img = k.preprocessing.image.array_to_img(y)
-# k.preprocessing.image.save_img("/home/mob/Desktop/ones.jpg", img)
+def train_tlfs(dataset_path, model_path, epochs):
+    dataset = DataSet()
+    dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False, norm_factors={"velocity": normalization_factor}, norm_shifts={"velocity": normalization_shift})
 
-normalization_factor = np.array([3.94457719, 4.94287727, 1.        ]) * 3.0 #3.172111148032056 * 2.0 # Two sigma deviation
-normalization_factor *= 1.0 / 255.0 #  caffe style scaling to R8G8B8 (-128, 127)
-normalization_shift = np.array([0., 0.,  0.])#np.array([0.02614982, 0.11674846,  0.        ]) # negative mean
+    hist = {}
 
-dataset = DataSet()
-dataset.load(path="/home/mob/Desktop/Dataset", blocks=["velocity"], shuffle=False, norm_factors={"velocity": normalization_factor}, norm_shifts={"velocity": normalization_shift})
-dataset.train.velocity.print_data_properties()
+    ae = Autoencoder(input_shape=(None, None, 3))
+    if os.path.isfile(model_path):
+        ae.load_model(path=model_path)
 
-hist = {}
+    hist = ae.train(epochs, dataset=dataset, batch_size=36,  augment=False)
+    ae.save_model(path=model_path)
 
-ae = Autoencoder(input_shape=(None, None, 3))
-#ae.load_model(path="/home/mob/Desktop")
+    return hist
 
-hist = ae.train(1, dataset=dataset, batch_size=36,  augment=False)
-ae.save_model(path="/home/mob/Desktop")
-if hist:
-    with open("/home/mob/Desktop/hist.json", 'w') as f:
-        json.dump(hist.history, f)
 
-plot = Plotter()
-orig = dataset.test.velocity
-pred = ae.predict(orig.data, batch_size=8)
-orig.denormalize()
-orig.print_data_properties()
-pred *= normalization_factor
-pred -= normalization_factor
-plot.plot_vector_field(orig.data[50], pred[50], title="Comp", scale=300.0)
+def predict_test_data(dataset_path, model_path):
+    dataset = DataSet()
+    dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False, norm_factors={"velocity": normalization_factor}, norm_shifts={"velocity": normalization_shift})
 
-plot.plot_vector_field(orig.data[150], pred[150], title="Comp", scale=300.0)
+    ae = Autoencoder(input_shape=(None, None, 3))
+    ae.load_model(path=model_path)
 
-plot.plot_vector_field(orig.data[250], pred[250], title="Comp", scale=300.0)
+    orig = dataset.test.velocity
+    pred = ae.predict(orig.data, batch_size=8)
+    orig.denormalize()
+    pred *= normalization_factor
+    pred -= normalization_factor
 
-if hist:
-    plot.plot_history(hist.history, log_y=True)
+    return orig.data, pred
 
-plot.show(True)
+
+if __name__ == '__main__':
+    import argparse
+    import os
+    import json
+
+    parser = argparse.ArgumentParser(description="Train the tlfs model")
+    parser.add_argument("-o", "--output", type=str, help="The output path")
+    parser.add_argument("-d", "--dataset", type=str, help="The dataset path")
+    parser.add_argument("--train", action="store_true", help="Train the model")
+    parser.add_argument("--test", action="store_true", help="Test the model")
+    parser.add_argument("--gui", action="store_true", help="Test the model")
+    parser.add_argument("model", type=str, help="The path to the model file (.h5)")
+    args = parser.parse_args()
+
+    os.makedirs(args.output, exist_ok=True)
+
+    plot = Plotter()
+
+    if args.train:
+        hist = train_tlfs(args.dataset, args.model, 1)
+        if hist:
+            with open(args.output + "/hist.json", 'w') as f:
+                json.dump(hist.history, f)
+            plot.plot_history(hist.history, log_y=True)
+
+    if args.test:
+        originals, predictions = predict_test_data(args.dataset, args.model)
+        for o, p in zip(originals, predictions):
+            plot.plot_vector_field(o, p, title="Test Prediction", scale=300.0)
+
+    if args.gui:
+        plot.show(True)
+
+    figures_path = args.output + "/figures"
+    os.makedirs(figures_path, exist_ok=True)
+    plot.save_figures(figures_path)
+

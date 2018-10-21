@@ -40,6 +40,7 @@ class Network(ABC):
         # self._build_model()
         # self._compile_model()
 
+
     #---------------------------------------------------------------------------------
     def train(self, epochs, **kwargs):
         """ Trains and returns the training history """
@@ -57,6 +58,7 @@ class Network(ABC):
 
         # Recompile (in case of updated hyper parameters)
         self._init_optimizer(epochs)
+        # TODO: remove this?
         self._build_model()
         self._compile_model()
         # Model Summary
@@ -70,11 +72,11 @@ class Network(ABC):
 
     #---------------------------------------------------------------------------------
     def save_model(self, path):
-        k.models.save_model(self.model, path + "/model.h5")
+        k.models.save_model(self.model, path)
 
     #---------------------------------------------------------------------------------
     def load_model(self, path):
-        self.model = k.models.load_model(path + "/model.h5")
+        self.model = k.models.load_model(path)
 
     #---------------------------------------------------------------------------------
     # Interface

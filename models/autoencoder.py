@@ -59,19 +59,19 @@ class Autoencoder(Network):
         # ----------------------------------------------------------------------------------
         x = k.layers.Input(shape=self.input_shape)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(64,  (3, 3), padding='same', trainable=True)(x)
+        h = k.layers.Conv2D(32,  (3, 3), padding='same', trainable=True)(x)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(64, (3, 3), padding='same', trainable=True)(h)
+        h = k.layers.Conv2D(32, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.MaxPool2D((2,2))(h)
 
         #----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True)(h)
+        h = k.layers.Conv2D(64, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True)(h)
+        h = k.layers.Conv2D(64, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.MaxPool2D((2, 2))(h)
@@ -80,10 +80,10 @@ class Autoencoder(Network):
         h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True)(h)
+        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True)(h)
+        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # # ----------------------------------------------------------------------------------
         # h = k.layers.Conv2D(256, (3, 3), padding='same')(h)
@@ -94,18 +94,8 @@ class Autoencoder(Network):
         # h = k.layers.Conv2DTranspose(256, (3, 3), padding='same')(h)
         # h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(256, (3, 3), padding='same')(h)
-        h = k.layers.Activation('relu')(h)
-        # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(256, (3, 3), padding='same')(h)
-        h = k.layers.Activation('relu')(h)
-        # ----------------------------------------------------------------------------------
         h = k.layers.Conv2DTranspose(128, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
-
-        #----------------------------------------------------------------------------------
-        #h = e.layers.InvMaxPool2D((2, 2))(h)
-        h = k.layers.UpSampling2D((2, 2))(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.Conv2DTranspose(128, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
@@ -118,6 +108,16 @@ class Autoencoder(Network):
         h = k.layers.UpSampling2D((2, 2))(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.Conv2DTranspose(64, (3, 3), padding='same')(h)
+        h = k.layers.Activation('relu')(h)
+        # ----------------------------------------------------------------------------------
+        h = k.layers.Conv2DTranspose(32, (3, 3), padding='same')(h)
+        h = k.layers.Activation('relu')(h)
+
+        #----------------------------------------------------------------------------------
+        #h = e.layers.InvMaxPool2D((2, 2))(h)
+        h = k.layers.UpSampling2D((2, 2))(h)
+        # ----------------------------------------------------------------------------------
+        h = k.layers.Conv2DTranspose(32, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
         y = k.layers.Conv2DTranspose(3, (3, 3), padding='same')(h)
@@ -133,23 +133,6 @@ class Autoencoder(Network):
             print("Weight sum: {}".format(np.sum(weights)))
             print("Bias sum: {}".format(np.sum(biases)))
 
-        vgg_layer_offsets = [
-            0.00012747866319274927,
-            0.6640491046269074,
-            3.974202513694763,
-            -0.9339616298675537,
-            3.9918301105499268,
-            -3.386970043182373,
-            2.323896884918213,
-            6.884225368499756,
-            10.036959648132324,
-            -6.082176208496094,
-            -7.6277875900268555,
-            -4.650637626647949,
-            -2.9270565509796143,
-            -1.0017167329788208,
-            -0.6847283244132996
-        ]
         vgg_layer_scales = [
             1.000021775577029,
             0.7820745278554599,
@@ -168,40 +151,40 @@ class Autoencoder(Network):
             0.4929815244100853
         ]
 
-        model_layer_idx = 0
-        vgg19_layer_idx = 0
-        # encoder weights
-        for i in range(6):
-            # search for the next conv2d layer
-            while not self.model.layers[model_layer_idx].get_weights():
-                model_layer_idx += 1
-            # set weights from vgg
-            weights = vgg19_weights[vgg19_layer_idx]
-            print(weights.shape)
-            weights = weights / vgg_layer_scales[i]
-            biases = vgg19_weights[vgg19_layer_idx + 1]
-            #biases = biases / np.sum(biases)
-            conv2d_weights = [weights, biases]
-            self.model.layers[model_layer_idx].set_weights(conv2d_weights)
-            vgg19_layer_idx += 2
-            model_layer_idx += 1
-
-        # decoder weights
-        model_layer_idx = len(self.model.layers) - 1
-        vgg19_layer_idx = 0
-        for i in range(6):
-            # search for the next conv2d transposed layer
-            while not self.model.layers[model_layer_idx].get_weights():
-                model_layer_idx -= 1
-            # set weights from vgg
-            weights = vgg19_weights[vgg19_layer_idx]
-            weights = weights / vgg_layer_scales[i]
-            biases = vgg19_weights[vgg19_layer_idx + 1][:self.model.layers[model_layer_idx].get_weights()[1].shape[0]]
-            #biases = biases / np.sum(biases)
-            conv2d_T_weights = [weights, biases]
-            self.model.layers[model_layer_idx].set_weights(conv2d_T_weights)
-            vgg19_layer_idx += 2
-            model_layer_idx -= 1
+        # model_layer_idx = 0
+        # vgg19_layer_idx = 0
+        # # encoder weights
+        # for i in range(6):
+        #     # search for the next conv2d layer
+        #     while not self.model.layers[model_layer_idx].get_weights():
+        #         model_layer_idx += 1
+        #     # set weights from vgg
+        #     weights = vgg19_weights[vgg19_layer_idx]
+        #     print(weights.shape)
+        #     weights = weights / vgg_layer_scales[i]
+        #     biases = vgg19_weights[vgg19_layer_idx + 1]
+        #     #biases = biases / np.sum(biases)
+        #     conv2d_weights = [weights, biases]
+        #     self.model.layers[model_layer_idx].set_weights(conv2d_weights)
+        #     vgg19_layer_idx += 2
+        #     model_layer_idx += 1
+        #
+        # # decoder weights
+        # model_layer_idx = len(self.model.layers) - 1
+        # vgg19_layer_idx = 0
+        # for i in range(6):
+        #     # search for the next conv2d transposed layer
+        #     while not self.model.layers[model_layer_idx].get_weights():
+        #         model_layer_idx -= 1
+        #     # set weights from vgg
+        #     weights = vgg19_weights[vgg19_layer_idx]
+        #     weights = weights / vgg_layer_scales[i]
+        #     biases = vgg19_weights[vgg19_layer_idx + 1][:self.model.layers[model_layer_idx].get_weights()[1].shape[0]]
+        #     #biases = biases / np.sum(biases)
+        #     conv2d_T_weights = [weights, biases]
+        #     self.model.layers[model_layer_idx].set_weights(conv2d_T_weights)
+        #     vgg19_layer_idx += 2
+        #     model_layer_idx -= 1
 
     def _compile_model(self):
         self.model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)

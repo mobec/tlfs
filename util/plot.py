@@ -372,7 +372,7 @@ class Plotter(object):
         self._figures.append(fig)
         
     #---------------------------------------------------------------------------------
-    def add_figure(fig):
+    def add_figure(self, fig):
         self._figures.append(fig)
     
     #---------------------------------------------------------------------------------
@@ -397,16 +397,19 @@ class Plotter(object):
 
     #---------------------------------------------------------------------------------
     # Images are removed from the plotter object after saving them to disk. Make sure to show them beforehand if needed.
-    def save_figures(self, path, filename="figure", filetype="png"):
-        if not isinstance(threading.current_thread(), threading._MainThread):
-            print("[WARNING] Current thread is not the main thread. Aborting save_figures call...")
-            return
+    def save_figures(self, path, filetype="jpg"):
+        # if not isinstance(threading.current_thread(), threading._MainThread):
+        #     print("[WARNING] Current thread is not the main thread. Aborting save_figures call...")
+        #     return
 
         # if len(self._figures) == 1:
         #     self._figures[0].savefig(path + "{}.{}".format(filename, filetype), bbox_inches='tight')
         # else:
         for fig in self._figures:
-            fig.savefig(path + "{}_{}.{}".format(filename, self._last_saved_index, filetype), bbox_inches='tight')
+            title = fig._suptitle.get_text()
+            if title:
+                title += " "
+            fig.savefig(path + title + "{:04d}.{}".format(self._last_saved_index, filetype), bbox_inches='tight')
             self._last_saved_index += 1
             plt.close(fig)
         self._figures = []
