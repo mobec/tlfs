@@ -413,7 +413,7 @@ class Plotter(object):
             title = fig._suptitle.get_text()
             if title:
                 title += " "
-            fig.savefig(path + title + "{:04d}.{}".format(self._last_saved_index, filetype), bbox_inches='tight')
+            fig.savefig(path + "/" + title + "{:04d}.{}".format(self._last_saved_index, filetype), bbox_inches='tight')
             self._last_saved_index += 1
             plt.close(fig)
         self._figures = []
