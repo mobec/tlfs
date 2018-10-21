@@ -19,12 +19,15 @@
 #
 #******************************************************************************
 
+import matplotlib
+
 if __name__ == "__main__":
     import matplotlib
     matplotlib.use('TkAgg')
+else:
+    matplotlib.use("Agg")
 
 from matplotlib import pyplot as plt
-import matplotlib
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.widgets as wgt
 from matplotlib.ticker import MaxNLocator
