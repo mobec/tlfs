@@ -36,8 +36,8 @@ def train_tlfs(dataset_path, model_path, epochs):
     hist = {}
 
     ae = Autoencoder(input_shape=(None, None, 3))
-    if os.path.isfile(model_path):
-        ae.load_model(path=model_path)
+    # if os.path.isfile(model_path):
+    #     ae.load_model(path=model_path)
 
     hist = ae.train(epochs, dataset=dataset, batch_size=36,  augment=False)
     ae.save_model(path=model_path)

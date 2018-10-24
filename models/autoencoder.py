@@ -124,14 +124,14 @@ class Autoencoder(Network):
 
         self.model = k.models.Model(inputs=x, outputs=y)
 
-        vgg19 = k.applications.vgg19.VGG19(include_top=False, weights='imagenet', input_tensor=None, input_shape=self.input_shape, pooling=None, classes=1000)
-        vgg19_weights = vgg19.get_weights()
-
-        for i in range(len(vgg19_weights) // 2):
-            weights = vgg19_weights[i*2]
-            biases = vgg19_weights[i*2 + 1]
-            print("Weight sum: {}".format(np.sum(weights)))
-            print("Bias sum: {}".format(np.sum(biases)))
+        # vgg19 = k.applications.vgg19.VGG19(include_top=False, weights='imagenet', input_tensor=None, input_shape=self.input_shape, pooling=None, classes=1000)
+        # vgg19_weights = vgg19.get_weights()
+        #
+        # for i in range(len(vgg19_weights) // 2):
+        #     weights = vgg19_weights[i*2]
+        #     biases = vgg19_weights[i*2 + 1]
+        #     print("Weight sum: {}".format(np.sum(weights)))
+        #     print("Bias sum: {}".format(np.sum(biases)))
 
         vgg_layer_scales = [
             1.000021775577029,
