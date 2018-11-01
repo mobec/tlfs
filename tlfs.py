@@ -27,7 +27,7 @@ np.random.seed(4)
 
 normalization_factor = np.array([3.94457719, 4.94287727, 1.]) * 3.0  # 3.172111148032056 * 2.0 # Two sigma deviation
 normalization_factor *= 1.0 / 255.0  # caffe style scaling to R8G8B8 (-128, 127)
-normalization_shift = np.array([0., 0., 0.])  # np.array([0.02614982, 0.11674846,  0.        ]) # negative mean
+normalization_shift = np.array([0.02614982, 0.11674846,  0.0]) # negative mean
 
 def train_tlfs(dataset_path, model_path, epochs):
     dataset = DataSet()
@@ -39,7 +39,7 @@ def train_tlfs(dataset_path, model_path, epochs):
     # if os.path.isfile(model_path):
     #     ae.load_model(path=model_path)
 
-    hist = ae.train(epochs, dataset=dataset, batch_size=36,  augment=False)
+    hist = ae.train(epochs, dataset=dataset, batch_size=32,  augment=False)
     ae.save_model(path=model_path)
 
     return hist
@@ -72,6 +72,7 @@ if __name__ == '__main__':
     parser.add_argument("--train", action="store_true", help="Train the model")
     parser.add_argument("--test", action="store_true", help="Test the model")
     parser.add_argument("--gui", action="store_true", help="Test the model")
+    parser.add_argument("--epochs", type=int, default=50, help="The number of training epochs")
     parser.add_argument("model", type=str, help="The path to the model file (.h5)")
     args = parser.parse_args()
 
@@ -80,7 +81,7 @@ if __name__ == '__main__':
     plot = Plotter()
 
     if args.train:
-        hist = train_tlfs(args.dataset, args.model, 50)
+        hist = train_tlfs(args.dataset, args.model, args.epochs)
         if hist:
             with open(args.output + "/hist.json", 'w') as f:
                 json.dump(hist.history, f)
