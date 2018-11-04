@@ -62,40 +62,44 @@ def predict_test_data(dataset_path, model_path):
 
 
 if __name__ == '__main__':
-    import argparse
-    import os
-    import json
 
-    parser = argparse.ArgumentParser(description="Train the tlfs model")
-    parser.add_argument("-o", "--output", type=str, required=True, help="The output path")
-    parser.add_argument("-d", "--dataset", type=str, required=True, help="The dataset path")
-    parser.add_argument("--train", action="store_true", help="Train the model")
-    parser.add_argument("--test", action="store_true", help="Test the model")
-    parser.add_argument("--gui", action="store_true", help="Test the model")
-    parser.add_argument("--epochs", type=int, default=50, help="The number of training epochs")
-    parser.add_argument("model", type=str, help="The path to the model file (.h5)")
-    args = parser.parse_args()
+    try:
+        import argparse
+        import os
+        import json
 
-    os.makedirs(args.output, exist_ok=True)
+        parser = argparse.ArgumentParser(description="Train the tlfs model")
+        parser.add_argument("-o", "--output", type=str, required=True, help="The output path")
+        parser.add_argument("-d", "--dataset", type=str, required=True, help="The dataset path")
+        parser.add_argument("--train", action="store_true", help="Train the model")
+        parser.add_argument("--test", action="store_true", help="Test the model")
+        parser.add_argument("--gui", action="store_true", help="Test the model")
+        parser.add_argument("--epochs", type=int, default=50, help="The number of training epochs")
+        parser.add_argument("model", type=str, help="The path to the model file (.h5)")
+        args = parser.parse_args()
 
-    plot = Plotter()
+        os.makedirs(args.output, exist_ok=True)
 
-    if args.train:
-        hist = train_tlfs(args.dataset, args.model, args.epochs)
-        if hist:
-            with open(args.output + "/hist.json", 'w') as f:
-                json.dump(hist.history, f)
-            plot.plot_history(hist.history, log_y=True)
+        plot = Plotter()
 
-    if args.test:
-        originals, predictions = predict_test_data(args.dataset, args.model)
-        for o, p in zip(originals, predictions):
-            plot.plot_vector_field(o, p, title="Test Prediction", scale=300.0)
+        if args.train:
+            hist = train_tlfs(args.dataset, args.model, args.epochs)
+            if hist:
+                with open(args.output + "/hist.json", 'w') as f:
+                    json.dump(hist.history, f)
+                plot.plot_history(hist.history, log_y=True)
 
-    if args.gui:
-        plot.show(True)
+        if args.test:
+            originals, predictions = predict_test_data(args.dataset, args.model)
+            for o, p in zip(originals, predictions):
+                plot.plot_vector_field(o, p, title="Test Prediction", scale=300.0)
 
-    figures_path = args.output + "/figures"
-    os.makedirs(figures_path, exist_ok=True)
-    plot.save_figures(figures_path)
+        if args.gui:
+            plot.show(True)
 
+        figures_path = args.output + "/figures"
+        os.makedirs(figures_path, exist_ok=True)
+        plot.save_figures(figures_path)
+    finally:
+        import util.pushover
+        util.pushover.notify("Training complete")
