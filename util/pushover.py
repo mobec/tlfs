@@ -18,11 +18,13 @@
 import os
 import requests
 import json
-
+import socket
 
 def notify(message: str, pushover_authentivation: str = "pushover.auth"):
     if not os.path.isfile(pushover_authentivation):
         return
+
+    message = "[" + socket.gethostname() + "]: " + message
 
     url = "https://api.pushover.net/1/messages.json"
     user = ""
@@ -33,10 +35,8 @@ def notify(message: str, pushover_authentivation: str = "pushover.auth"):
         user = auth["user"]
         token = auth["token"]
 
-    r = requests.post(url, data={
+    requests.post(url, data={
         'user': user,
         'token': token,
         'message': message
     })
-
-    print(r.text)
