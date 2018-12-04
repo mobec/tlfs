@@ -25,7 +25,8 @@ from util.plot import Plotter
 import numpy as np
 np.random.seed(4)
 
-normalization_factor = np.array([3.94457719, 4.94287727, 1.]) * 3.0  # 3.172111148032056 * 2.0 # Two sigma deviation
+# normalization_factor = np.array([3.94457719, 4.94287727, 1.]) * 3.0  # 3.172111148032056 * 2.0 # Two sigma deviation
+normalization_factor = np.array([4.28670895, 4.10170295, 1.]) * 44 # liquid
 normalization_factor *= 1.0 / 255.0  # caffe style scaling to R8G8B8 (-128, 127)
 normalization_shift = np.array([0.02614982, 0.11674846,  0.0]) # negative mean
 
