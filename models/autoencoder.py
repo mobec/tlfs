@@ -20,7 +20,7 @@
 
 
 import tensorflow as tf
-from tensorflow.python import keras as k
+import keras as k
 import extensions as e
 import numpy as np
 

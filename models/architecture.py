@@ -24,8 +24,9 @@ import inspect
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.keras import backend as K
-import tensorflow.python.keras as k
+from keras import backend as K
+import keras as k
+
 
 class Network(ABC):
     """ Superclass for all model architectures """
