@@ -35,7 +35,7 @@ def cast_shape_to(shape, type):
             out_shape.append(None)
     return out_shape
 
-class Autoencoder(Network):
+class ResNet(Network):
     def _init_vars(self, **kwargs):
         self.init_func = "glorot_normal"
         self.adam_epsilon = None #1e-8 # 1e-3
@@ -58,27 +58,46 @@ class Autoencoder(Network):
     def _build_model(self):
         # ----------------------------------------------------------------------------------
         x = k.layers.Input(shape=self.input_shape)
+
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(64,  (3, 3), padding='same', trainable=True)(x)
+        h = k.layers.Conv2D(64,  (7, 7), strides=(2, 2), padding='same', trainable=True)(x)
+        h = k.layers.Activation('relu')(h)
+        # ----------------------------------------------------------------------------------
+        h = k.layers.MaxPool2D((3, 3), strides=(2, 2))(h)
+
+        skip = h
+
+        # ----------------------------------------------------------------------------------
+        h = k.layers.Conv2D(64, (1, 1), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.Conv2D(64, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.MaxPool2D((2,2))(h)
+        h = k.layers.Conv2D(256, (1, 1), padding='same', trainable=True)(h)
+
+        h = k.layers.Add()
+
+        h = k.layers.Activation('relu')(h)
+
+
+        # ----------------------------------------------------------------------------------
+        h = k.layers.Conv2D(64, (3, 3), padding='same', trainable=True)(h)
+        h = k.layers.Activation('relu')(h)
+
 
         #----------------------------------------------------------------------------------
         h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True)(h)
         h = k.layers.Activation('relu')(h)
-        # # ----------------------------------------------------------------------------------
-        # h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True)(h)
-        # h = k.layers.Activation('relu')(h)
-        # # ----------------------------------------------------------------------------------
-        # h = k.layers.MaxPool2D((2, 2))(h)
-        #
-        # #----------------------------------------------------------------------------------
-        # h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True)(h)
-        # h = k.layers.Activation('relu')(h)
+        # ----------------------------------------------------------------------------------
+        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True)(h)
+        h = k.layers.Activation('relu')(h)
+        # ----------------------------------------------------------------------------------
+        h = k.layers.MaxPool2D((2, 2))(h)
+
+        #----------------------------------------------------------------------------------
+        h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True)(h)
+        h = k.layers.Activation('relu')(h)
         # # ----------------------------------------------------------------------------------
         # h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True)(h)
         # h = k.layers.Activation('relu')(h)
@@ -99,16 +118,16 @@ class Autoencoder(Network):
         # # ----------------------------------------------------------------------------------
         # h = k.layers.Conv2DTranspose(256, (3, 3), padding='same')(h)
         # h = k.layers.Activation('relu')(h)
-        # # ----------------------------------------------------------------------------------
-        # h = k.layers.Conv2DTranspose(128, (3, 3), padding='same')(h)
-        # h = k.layers.Activation('relu')(h)
-        #
-        # #----------------------------------------------------------------------------------
-        # #h = e.layers.InvMaxPool2D((2, 2))(h)
-        # h = k.layers.UpSampling2D((2, 2))(h)
-        # # ----------------------------------------------------------------------------------
-        # h = k.layers.Conv2DTranspose(128, (3, 3), padding='same')(h)
-        # h = k.layers.Activation('relu')(h)
+        # ----------------------------------------------------------------------------------
+        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same')(h)
+        h = k.layers.Activation('relu')(h)
+
+        #----------------------------------------------------------------------------------
+        #h = e.layers.InvMaxPool2D((2, 2))(h)
+        h = k.layers.UpSampling2D((2, 2))(h)
+        # ----------------------------------------------------------------------------------
+        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same')(h)
+        h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.Conv2DTranspose(64, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)

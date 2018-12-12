@@ -19,7 +19,7 @@
 ###############################################################################
 
 from dataset.datasets import DataSet
-from models.autoencoder import Autoencoder
+from models.vgg import VGG
 from util.plot import Plotter
 
 import numpy as np
@@ -36,7 +36,7 @@ def train_tlfs(dataset_path, model_path, epochs):
 
     hist = {}
 
-    ae = Autoencoder(input_shape=(None, None, 3))
+    ae = VGG(input_shape=(None, None, 3))
     # if os.path.isfile(model_path):
     #     ae.load_model(path=model_path)
 
@@ -50,7 +50,7 @@ def predict_test_data(dataset_path, model_path):
     dataset = DataSet()
     dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False, norm_factors={"velocity": normalization_factor}, norm_shifts={"velocity": normalization_shift})
 
-    ae = Autoencoder(input_shape=(None, None, 3))
+    ae = VGG(input_shape=(None, None, 3))
     ae.load_model(path=model_path)
 
     orig = dataset.test.velocity

@@ -1,2 +1,2 @@
 from . import architecture
-from . import autoencoder
+from . import vgg
