@@ -21,6 +21,7 @@
 from dataset.datasets import DataSet
 from models.vgg import VGG
 from util.plot import Plotter
+import extensions.regularizers
 
 import numpy as np
 np.random.seed(4)
@@ -51,7 +52,7 @@ def predict_test_data(dataset_path, model_path):
     dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False, norm_factors={"velocity": normalization_factor}, norm_shifts={"velocity": normalization_shift})
 
     ae = VGG(input_shape=(None, None, 3))
-    ae.load_model(path=model_path)
+    ae.load_model(path=model_path, custom_objects={"ConvolutionOrthogonality": extensions.regularizers.ConvolutionOrthogonality})
 
     orig = dataset.test.velocity
     pred = ae.predict(orig.data, batch_size=8)

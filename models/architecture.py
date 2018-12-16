@@ -76,8 +76,8 @@ class Network(ABC):
         k.models.save_model(self.model, path)
 
     #---------------------------------------------------------------------------------
-    def load_model(self, path):
-        self.model = k.models.load_model(path)
+    def load_model(self, path, custom_objects={}):
+        self.model = k.models.load_model(path, custom_objects=custom_objects)
 
     #---------------------------------------------------------------------------------
     # Interface
