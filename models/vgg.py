@@ -101,27 +101,27 @@ class VGG(Network):
         # h = k.layers.Conv2DTranspose(256, (3, 3), padding='same')(h)
         # h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same', kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
 
         #----------------------------------------------------------------------------------
         #h = e.layers.InvMaxPool2D((2, 2))(h)
         h = k.layers.UpSampling2D((2, 2))(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same', kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same', kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
 
         #----------------------------------------------------------------------------------
         #h = e.layers.InvMaxPool2D((2, 2))(h)
         h = k.layers.UpSampling2D((2, 2))(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same', kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        y = k.layers.Conv2DTranspose(3, (3, 3), padding='same', kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        y = k.layers.Conv2DTranspose(3, (3, 3), padding='same')(h)
 
         self.model = k.models.Model(inputs=x, outputs=y)
 
