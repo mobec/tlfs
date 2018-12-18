@@ -57,6 +57,8 @@ class VGG(Network):
         return self.optimizer
 
     def _build_model(self):
+        self.add_custom_object(e.regularizers.ConvolutionOrthogonality)
+
         # ----------------------------------------------------------------------------------
         x = k.layers.Input(shape=self.input_shape)
         # ----------------------------------------------------------------------------------

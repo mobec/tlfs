@@ -17,12 +17,12 @@
 #   limitations under the License.
 #
 ###############################################################################
+import os
+import pickle
 
 from dataset.datasets import DataSet
 from models.vgg import VGG
 from util.plot import Plotter
-import extensions.regularizers
-
 import numpy as np
 np.random.seed(4)
 
@@ -30,6 +30,7 @@ np.random.seed(4)
 normalization_factor = np.array([4.28670895, 4.10170295, 1.]) * 44 # liquid
 normalization_factor *= 1.0 / 255.0  # caffe style scaling to R8G8B8 (-128, 127)
 normalization_shift = np.array([0.02614982, 0.11674846,  0.0]) # negative mean
+
 
 def train_tlfs(dataset_path, model_path, epochs):
     dataset = DataSet()
@@ -52,7 +53,8 @@ def predict_test_data(dataset_path, model_path):
     dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False, norm_factors={"velocity": normalization_factor}, norm_shifts={"velocity": normalization_shift})
 
     ae = VGG(input_shape=(None, None, 3))
-    ae.load_model(path=model_path, custom_objects={"ConvolutionOrthogonality": extensions.regularizers.ConvolutionOrthogonality})
+
+    ae.load_model(path=model_path)
 
     orig = dataset.test.velocity
     pred = ae.predict(orig.data, batch_size=8)

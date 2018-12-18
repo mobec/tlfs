@@ -21,6 +21,8 @@
 
 from abc import ABC, abstractmethod
 import inspect
+import os
+import pickle
 
 import numpy as np
 import tensorflow as tf
@@ -40,7 +42,10 @@ class Network(ABC):
         # # Build & Compile -> Call this by yourself when model is loaded by weights only
         # self._build_model()
         # self._compile_model()
+        self.__custom_objects = {}
 
+    def add_custom_object(self, class_type):
+        self.__custom_objects[class_type.__name__] = class_type
 
     #---------------------------------------------------------------------------------
     def train(self, epochs, **kwargs):
@@ -73,11 +78,27 @@ class Network(ABC):
 
     #---------------------------------------------------------------------------------
     def save_model(self, path):
+        # This is the hack to support custom objects in a loader that might not know about the objects definitions.
+        # Unfortunately keras does not allow us to implement this in a more convenient way
+        custom_objects_path = os.path.dirname(path) + "/custom_objects.pickle"
+        with open(custom_objects_path, 'wb') as f:
+            print(self.__custom_objects)
+            pickle.dump(self.__custom_objects, f, pickle.HIGHEST_PROTOCOL)
+
         k.models.save_model(self.model, path)
 
     #---------------------------------------------------------------------------------
-    def load_model(self, path, custom_objects={}):
-        self.model = k.models.load_model(path, custom_objects=custom_objects)
+    def load_model(self, path, custom_objects=None):
+        if custom_objects is None:
+            custom_objects = {}
+
+        custom_objects_path = os.path.dirname(path) + "/custom_objects.pickle"
+        with open(custom_objects_path, 'rb') as f:
+            pickled_custom_objects = pickle.load(f)
+
+        pickled_custom_objects.update(custom_objects)
+
+        self.model = k.models.load_model(path, custom_objects=pickled_custom_objects)
 
     #---------------------------------------------------------------------------------
     # Interface

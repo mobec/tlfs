@@ -20,9 +20,10 @@ import keras.regularizers
 import keras.backend as K
 import tensorflow as tf
 
+
 class ConvolutionOrthogonality(keras.regularizers.Regularizer):
     def __init__(self, factor: float = 1.0):
-        self.factor =  K.cast_to_floatx(factor)
+        self.factor = factor
 
     def __call__(self, kernel):
         ks = tf.split(kernel, kernel.shape[-1], axis=-1)
@@ -36,7 +37,7 @@ class ConvolutionOrthogonality(keras.regularizers.Regularizer):
             # 3.) the regularizer is the L1 norm of the product divided by two, to account for double entries from the
             # symmetric matrix o
             w = K.expand_dims(w, -1)
-            result += self.factor / 2.0 * K.sum(K.abs(K.dot(o, w)))
+            result += K.cast_to_floatx(self.factor) / 2.0 * K.sum(K.abs(K.dot(o, w)))
         return result
 
     def get_config(self):
