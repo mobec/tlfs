@@ -192,6 +192,20 @@ class VGG(Network):
     def _compile_model(self):
         self.model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
 
+    def save_model(self, path):
+        # search for layers with custom regularizer and remove it from them
+        layers_with_ortho = []
+        for layer in self.model.layers:
+            if isinstance(layer.kernel_regularizer, e.regularizers.ConvolutionOrthogonality):
+                factor = layer.kernel_regularizer.factor
+                layers_with_ortho.append((layer, factor))
+                layer.kernel_regularizer = None
+        # save the model without the custom regularizer
+        super().save_model(path)
+        # restore the original regularizer
+        for layer, factor in layers_with_ortho:
+            layer.kernel_regularizer = e.regularizers.ConvolutionOrthogonality(factor)
+
     def _train(self, epochs, **kwargs):
         if epochs == 0:
             return None

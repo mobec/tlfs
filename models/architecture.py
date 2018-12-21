@@ -80,25 +80,27 @@ class Network(ABC):
     def save_model(self, path):
         # This is the hack to support custom objects in a loader that might not know about the objects definitions.
         # Unfortunately keras does not allow us to implement this in a more convenient way
-        custom_objects_path = os.path.dirname(path) + "/custom_objects.pickle"
-        with open(custom_objects_path, 'wb') as f:
-            print(self.__custom_objects)
-            pickle.dump(self.__custom_objects, f, pickle.HIGHEST_PROTOCOL)
+        # custom_objects_path = os.path.dirname(path) + "/custom_objects.pickle"
+        # with open(custom_objects_path, 'wb') as f:
+        #     print(self.__custom_objects)
+        #     pickle.dump(self.__custom_objects, f, pickle.HIGHEST_PROTOCOL)
+
+        # currently custom regularizers are just not embedded into the saved model
 
         k.models.save_model(self.model, path)
 
     #---------------------------------------------------------------------------------
     def load_model(self, path, custom_objects=None):
-        if custom_objects is None:
-            custom_objects = {}
+        # if custom_objects is None:
+        #     custom_objects = {}
+        #
+        # custom_objects_path = os.path.dirname(path) + "/custom_objects.pickle"
+        # with open(custom_objects_path, 'rb') as f:
+        #     pickled_custom_objects = pickle.load(f)
+        #
+        # pickled_custom_objects.update(custom_objects)
 
-        custom_objects_path = os.path.dirname(path) + "/custom_objects.pickle"
-        with open(custom_objects_path, 'rb') as f:
-            pickled_custom_objects = pickle.load(f)
-
-        pickled_custom_objects.update(custom_objects)
-
-        self.model = k.models.load_model(path, custom_objects=pickled_custom_objects)
+        self.model = k.models.load_model(path)
 
     #---------------------------------------------------------------------------------
     # Interface
