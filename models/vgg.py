@@ -196,7 +196,7 @@ class VGG(Network):
         # search for layers with custom regularizer and remove it from them
         layers_with_ortho = []
         for layer in self.model.layers:
-            if isinstance(layer.kernel_regularizer, e.regularizers.ConvolutionOrthogonality):
+            if hasattr(layer, "kernel_regularizer") and isinstance(layer.kernel_regularizer, e.regularizers.ConvolutionOrthogonality):
                 factor = layer.kernel_regularizer.factor
                 layers_with_ortho.append((layer, factor))
                 layer.kernel_regularizer = None
