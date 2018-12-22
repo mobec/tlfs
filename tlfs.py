@@ -79,7 +79,7 @@ if __name__ == '__main__':
         parser.add_argument("--test", action="store_true", help="Test the model")
         parser.add_argument("--gui", action="store_true", help="Test the model")
         parser.add_argument("--epochs", type=int, default=50, help="The number of training epochs")
-        parser.add_argument("--ortho_regularization", type=bool, action="store_true", help="Orthogonality regularization")
+        parser.add_argument("--ortho_regularization", action="store_true", help="Orthogonality regularization")
         parser.add_argument("--ortho_factor", type=float, default=0.1, help="Strength of the orthogonality regularization")
         parser.add_argument("model", type=str, help="The path to the model file (.h5)")
         args = parser.parse_args()
