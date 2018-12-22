@@ -32,13 +32,13 @@ normalization_factor *= 1.0 / 255.0  # caffe style scaling to R8G8B8 (-128, 127)
 normalization_shift = np.array([0.02614982, 0.11674846,  0.0]) # negative mean
 
 
-def train_tlfs(dataset_path, model_path, epochs):
+def train_tlfs(dataset_path, model_path, epochs, ortho=False, ortho_factor=0.1):
     dataset = DataSet()
     dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False, norm_factors={"velocity": normalization_factor}, norm_shifts={"velocity": normalization_shift})
 
     hist = {}
 
-    ae = VGG(input_shape=(None, None, 3))
+    ae = VGG(input_shape=(None, None, 3), ortho_regularizer=ortho, ortho_strength=ortho_factor)
     # if os.path.isfile(model_path):
     #     ae.load_model(path=model_path)
 
@@ -79,6 +79,8 @@ if __name__ == '__main__':
         parser.add_argument("--test", action="store_true", help="Test the model")
         parser.add_argument("--gui", action="store_true", help="Test the model")
         parser.add_argument("--epochs", type=int, default=50, help="The number of training epochs")
+        parser.add_argument("--ortho_regularization", type=bool, action="store_true", help="Orthogonality regularization")
+        parser.add_argument("--ortho_factor", type=float, default=0.1, help="Strength of the orthogonality regularization")
         parser.add_argument("model", type=str, help="The path to the model file (.h5)")
         args = parser.parse_args()
 
@@ -87,7 +89,7 @@ if __name__ == '__main__':
         plot = Plotter()
 
         if args.train:
-            hist = train_tlfs(args.dataset, args.model, args.epochs)
+            hist = train_tlfs(args.dataset, args.model, args.epochs, args.ortho_regularization, args.ortho_factor)
             if hist:
                 with open(args.output + "/hist.json", 'w') as f:
                     json.dump(hist.history, f)

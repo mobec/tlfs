@@ -48,7 +48,10 @@ class VGG(Network):
         self.kl_beta = 1e-5
         self.tensorflow_seed = kwargs.get("tensorflow_seed", 1337)
         self.model = None
-        self.ortho_regularizer_strength = 0.1
+        self.ortho_regularizer_strength = kwargs.get("ortho_strength", 0.1)
+        self.kernel_regularizer = None
+        if kwargs.get("ortho_regularizer", False):
+            self.kernel_regularizer = e.regularizers.ortho(self.ortho_regularizer_strength)
         tf.set_random_seed(self.tensorflow_seed)
         np.random.seed(1337)
 
@@ -62,25 +65,25 @@ class VGG(Network):
         # ----------------------------------------------------------------------------------
         x = k.layers.Input(shape=self.input_shape)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(64,  (3, 3), padding='same', trainable=True, kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(x)
+        h = k.layers.Conv2D(64,  (3, 3), padding='same', trainable=True, kernel_regularizer=self.kernel_regularizer)(x)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(64, (3, 3), padding='same', trainable=True, kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2D(64, (3, 3), padding='same', trainable=True, kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.MaxPool2D((2,2))(h)
 
         #----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True, kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True, kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True, kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2D(128, (3, 3), padding='same', trainable=True, kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.MaxPool2D((2, 2))(h)
 
         #----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True, kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True, kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Activation('relu')(h)
         # # ----------------------------------------------------------------------------------
         # h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True)(h)
@@ -103,27 +106,28 @@ class VGG(Network):
         # h = k.layers.Conv2DTranspose(256, (3, 3), padding='same')(h)
         # h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same', kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Activation('relu')(h)
 
         #----------------------------------------------------------------------------------
         #h = e.layers.InvMaxPool2D((2, 2))(h)
         h = k.layers.UpSampling2D((2, 2))(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same', kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same', kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Activation('relu')(h)
 
         #----------------------------------------------------------------------------------
         #h = e.layers.InvMaxPool2D((2, 2))(h)
         h = k.layers.UpSampling2D((2, 2))(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same', kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        y = k.layers.Conv2DTranspose(3, (3, 3), padding='same', kernel_regularizer=e.regularizers.ortho(self.ortho_regularizer_strength))(h)
+        y = k.layers.Conv2DTranspose(3, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
+        y = k.layers.Conv2DTranspose(3, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
 
         self.model = k.models.Model(inputs=x, outputs=y)
 
