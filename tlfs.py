@@ -26,15 +26,15 @@ from util.plot import Plotter
 import numpy as np
 np.random.seed(4)
 
-# normalization_factor = np.array([3.94457719, 4.94287727, 1.]) * 3.0  # 3.172111148032056 * 2.0 # Two sigma deviation
-normalization_factor = np.array([4.28670895, 4.10170295, 1.]) * 44 # liquid
-normalization_factor *= 1.0 / 255.0  # caffe style scaling to R8G8B8 (-128, 127)
-normalization_shift = np.array([0.02614982, 0.11674846,  0.0]) # negative mean
-
 
 def train_tlfs(dataset_path, model_path, epochs, ortho=False, ortho_factor=0.1):
     dataset = DataSet()
-    dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False, norm_factors={"velocity": normalization_factor}, norm_shifts={"velocity": normalization_shift})
+    dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False)
+    normalization_shift = np.mean(dataset.train.velocity.data, axis=(1, 2))
+    normalization_factor = np.std(dataset.train.velocity.data, axis=(1, 2))
+    normalization_factor *= 1.0 / 255.0
+    dataset.train.velocity.normalize(shift=normalization_shift, factor=normalization_factor)
+    dataset.val.velocity.normalize(shift=normalization_shift, factor=normalization_factor)
 
     hist = {}
 
@@ -50,7 +50,11 @@ def train_tlfs(dataset_path, model_path, epochs, ortho=False, ortho_factor=0.1):
 
 def predict_test_data(dataset_path, model_path):
     dataset = DataSet()
-    dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False, norm_factors={"velocity": normalization_factor}, norm_shifts={"velocity": normalization_shift})
+    dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False)
+    normalization_shift = np.mean(dataset.train.velocity.data, axis=(1, 2))
+    normalization_factor = np.std(dataset.train.velocity.data, axis=(1, 2))
+    normalization_factor *= 1.0 / 255.0
+    dataset.test.velocity.normalize(shift=normalization_shift, factor=normalization_factor)
 
     ae = VGG(input_shape=(None, None, 3))
 
@@ -66,7 +70,6 @@ def predict_test_data(dataset_path, model_path):
 
 
 if __name__ == '__main__':
-
     try:
         import argparse
         import os
