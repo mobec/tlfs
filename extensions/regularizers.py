@@ -32,12 +32,12 @@ class ConvolutionOrthogonality(keras.regularizers.Regularizer):
             k = K.squeeze(k, -1)
             # 1.) Flatten the weight matrix
             w = K.reshape(k, shape=(-1,))
-            # 2.) construct a square matrix consisting of w repeated in the rows and clear the diagonal
-            o = K.squeeze(K.repeat(K.expand_dims(w, -1) ,w.shape[0]), -1) - K.eye(w.shape[0].value) * w
+            # 2.) construct a square matrix consisting of w repeated in the columns and clear the diagonal
+            o = K.transpose(K.squeeze(K.repeat(K.expand_dims(w, -1), w.shape[0]), -1)) - K.eye(w.shape[0].value) * w
             # 3.) the regularizer is the L1 norm of the product divided by two, to account for double entries from the
             # symmetric matrix o
             w = K.expand_dims(w, -1)
-            result += K.cast_to_floatx(self.factor) / 2.0 * K.sum(K.abs(K.dot(o, w)))
+            result += K.cast_to_floatx(self.factor) / 2.0 * K.sum(K.abs(K.dot(o, w))) + K.flatten(K.abs(K.dot(K.transpose(w), w) - 1.0))[0]
         return result
 
     def get_config(self):
