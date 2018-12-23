@@ -37,7 +37,7 @@ class ConvolutionOrthogonality(keras.regularizers.Regularizer):
             # 3.) the regularizer is the L1 norm of the product divided by two, to account for double entries from the
             # symmetric matrix o
             w = K.expand_dims(w, -1)
-            result += K.cast_to_floatx(self.factor) / 2.0 * K.sum(K.abs(K.dot(o, w))) + K.flatten(K.abs(tf.tensordot(w, w,1) - 1.0))[0]
+            result += K.cast_to_floatx(self.factor) / 2.0 * K.sum(K.abs(K.dot(o, w))) + K.flatten(K.abs(tf.tensordot(w, w,0) - 1.0))[0]
         return result
 
     def get_config(self):
