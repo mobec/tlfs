@@ -27,7 +27,7 @@ class ConvolutionOrthogonality(keras.regularizers.Regularizer):
 
     def __call__(self, kernel):
         ks = tf.split(kernel, kernel.shape[-1], axis=-1)
-        result = 0.0
+        result = K.variable(0.0, dtype="float32", name="result_accumulator")
         for k in ks:
             #k = K.squeeze(k, -1)
             # 1.) Flatten the weight matrix
