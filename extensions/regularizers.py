@@ -33,10 +33,10 @@ class ConvolutionOrthogonality(keras.regularizers.Regularizer):
             # 1.) Flatten the weight matrix
             w = K.expand_dims(K.flatten(k), -1)
             # 2.) construct a square matrix consisting of w repeated in the columns and clear the diagonal
-            o = K.transpose(K.squeeze(K.repeat(w, w.shape[0]), -1)) - K.eye(w.shape[0].value) * w
+            o = K.squeeze(K.repeat(w, w.shape[0]), -1) - K.eye(w.shape[0].value) * w
             # 3.) the regularizer is the L1 norm of the product divided by two, to account for double entries from the
             # symmetric matrix o
-            result += K.cast_to_floatx(self.factor) / 2.0 * (K.sum(K.abs(K.dot(o, w))))
+            result += K.cast_to_floatx(self.factor) / 2.0 * (K.sum(K.abs(K.dot(w, o))))
             #+ K.abs(tf.norm(w, ord=2) - 1.0)
         return result
 
