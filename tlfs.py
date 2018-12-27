@@ -32,6 +32,8 @@ def train_tlfs(dataset_path, model_path, epochs, ortho=False, ortho_factor=0.1):
     dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False)
     normalization_shift = np.mean(dataset.train.velocity.data, axis=(0, 1, 2))
     normalization_factor = np.std(dataset.train.velocity.data, axis=(0, 1, 2))
+    normalization_factor[-1] = 1.0
+    print("shift: {} factor: {}".format(normalization_shift, normalization_factor))
     normalization_factor *= 1.0 / 255.0
     dataset.train.velocity.normalize(shift=normalization_shift, factor=normalization_factor)
     dataset.val.velocity.normalize(shift=normalization_shift, factor=normalization_factor)
@@ -53,6 +55,7 @@ def predict_test_data(dataset_path, model_path):
     dataset.load(path=dataset_path, blocks=["velocity"], shuffle=False)
     normalization_shift = np.mean(dataset.train.velocity.data, axis=(0, 1, 2))
     normalization_factor = np.std(dataset.train.velocity.data, axis=(0, 1, 2))
+    normalization_factor[-1] = 1.0
     normalization_factor *= 1.0 / 255.0
     dataset.test.velocity.normalize(shift=normalization_shift, factor=normalization_factor)
 
