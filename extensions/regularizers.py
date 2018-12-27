@@ -36,7 +36,7 @@ class ConvolutionOrthogonality(keras.regularizers.Regularizer):
             o = K.squeeze(K.repeat(K.expand_dims(w, -1), w.shape[0]), -1) - K.eye(w.shape[0].value) * w
             # 3.) the regularizer is the L1 norm of the product divided by two, to account for double entries from the
             # symmetric matrix o
-            result += (self.factor / 2.0) * (K.sum(K.abs(K.dot(K.expand_dims(w, 0), o))) + K.abs(tf.norm(w, ord=2) - 1.0))
+            result.assign_add((self.factor / 2.0) * (K.sum(K.abs(K.dot(K.expand_dims(w, 0), o))) + K.abs(tf.norm(w, ord=2) - 1.0)))
         return result
 
     def get_config(self):
