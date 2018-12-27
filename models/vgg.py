@@ -39,7 +39,7 @@ class VGG(Network):
     def _init_vars(self, **kwargs):
         self.init_func = "glorot_normal"
         self.adam_epsilon = None #1e-8 # 1e-3
-        self.adam_learning_rate = 0.001 # higher values tend to overshoot in the beginning
+        self.adam_learning_rate = 0.01 # higher values tend to overshoot in the beginning
         self.adam_weight_decay = 0.000#1e-5
         self.input_shape = kwargs.get("input_shape", (64, 64, 64, 1))
         self.loss = "mse"
@@ -48,7 +48,7 @@ class VGG(Network):
         self.kl_beta = 1e-5
         self.tensorflow_seed = kwargs.get("tensorflow_seed", 1337)
         self.model = None
-        self.ortho_regularizer_strength = kwargs.get("ortho_strength", 0.1)
+        self.ortho_regularizer_strength = kwargs.get("ortho_strength", 0.01)
         self.kernel_regularizer = None
         if kwargs.get("ortho_regularizer", False):
             self.kernel_regularizer = e.regularizers.ortho(self.ortho_regularizer_strength)
