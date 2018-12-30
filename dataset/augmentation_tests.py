@@ -20,7 +20,7 @@
 import unittest
 
 import numpy as np
-import dataset.augmentation as aug
+from . import augmentation as aug
 
 
 class TestAugmentation(unittest.TestCase):

@@ -1,6 +1,6 @@
 #******************************************************************************
 #
-#   Keras Gems
+#   Fluid Dataset
 #   Copyright 2018 Moritz Becher, Lukas Prantl and Steffen Wiewel
 #
 #   dataset classes
@@ -29,19 +29,107 @@ from datetime import datetime
 import json
 import random
 
-from util import filesystem
-from util import console
-from dataset import augmentation
+from .util import console
+from . import augmentation
 
-def get_dataset_root(name="", path=""):
-    assert name or path, ("Must provide either a path to the dataset or the name of the dataset, in which case load will try to find the dataset")
-    if name:
-        dataset_root = filesystem.find_directory("datasets") + "/" + name
-    if path:
-        dataset_root = path
-    #print("Loading dataset from {}".format(dataset_root))
-    assert os.path.isfile(dataset_root + "/description.json"), ("The dataset does not contain a description.json")
-    return dataset_root
+
+# ================================================
+class DataSet(object):
+    """ Data set can contain multiple data blocks of different types. E.g. velocities, pressures and levelsets
+
+    """
+
+    # ------------------------------------------------------------------------------------------------
+    def __init__(self):
+        self.__train = None
+        self.__val = None
+        self.__test = None
+
+    # ------------------------------------------------------------------------------------------------
+    def load(self, path, blocks=["pressure", "velocity", "density"], norm_factors={}, norm_shifts={}, files_per_batch=0,
+             shuffle=False, validation_split=0.1, test_split=0.1, augment=False):
+        """
+        ## load
+        load a dataset from a directory containing a description.json and subdirectories with serialized grids.
+        * __path__: specify the path to the dataset
+        * __name__: specify the name of the dataset to load. will try to find in surrounding directories
+        * __blocks__: exclude/ add grid types to load
+        * __norm_factors__: a dict containing block names as keys and normalisation factors as values
+        * __files_per_batch__: number of elements to load on next call
+        """
+        # get the directory of the dataset, and load the description
+        self.dataset_root = os.path.abspath(path)
+        with open(self.dataset_root + "/description.json", 'r') as f:
+            description = json.load(f)
+        self.description = description
+
+        # initialize the batch loading behaviour
+        self.block_names = [block for block in blocks if block in self.description["grids"]]
+        self.num_files = len(glob.glob(self.dataset_root + "/" + self.description["grids"][0] + "/*.npz"))
+        assert self.num_files != 0, ("No .npz were found in the dataset location")
+        if self.num_files < self.description["num_scenes"]:
+            print("Warning: the dataset is incomplete")
+        self.files_per_batch = files_per_batch
+        self.norm_factors = norm_factors
+        self.norm_shifts = norm_shifts
+
+        # build index list that enables shuffling of the dataset
+        self.indices = np.arange(start=0, stop=self.num_files)
+        self.shuffle = shuffle
+        self.augment = augment
+
+        # split the dataset into train, val and test
+        self.train_range, self.val_range, self.test_range = self._get_ranges(self.num_files, validation_split,
+                                                                             test_split)
+        if self.train_range[0] == self.train_range[1]:
+            print("[WARNING] Dataset was not split for training data")
+        if self.val_range[0] == self.val_range[1]:
+            print("[WARNING] Dataset was not split for validation data")
+        if self.test_range[0] == self.test_range[1]:
+            print("[WARNING] Dataset was not split for test data")
+
+    @property
+    def train(self):
+        if self.train_range[0] == self.train_range[1]:
+            raise RuntimeError("Dataset was not split for training data, but training data was requested")
+            return None
+        if self.__train is None:
+            print("Loading training data ({} Scenes)".format(self.train_range[1] - self.train_range[0]))
+            self.__train = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts,
+                                      self.files_per_batch, self.indices[self.train_range[0]:self.train_range[1]],
+                                      self.description, self.shuffle, self.augment)
+        return self.__train
+
+    @property
+    def val(self):
+        if self.val_range[0] == self.val_range[1]:
+            raise RuntimeError("Dataset was not split for validation data, but validation data was requested")
+            return None
+        if self.__val is None:
+            print("Loading validation data ({} Scenes)".format(self.val_range[1] - self.val_range[0]))
+            self.__val = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts,
+                                    self.files_per_batch, self.indices[self.val_range[0]:self.val_range[1]],
+                                    self.description, self.shuffle, self.augment)
+        return self.__val
+
+    @property
+    def test(self):
+        if self.test_range[0] == self.test_range[1]:
+            raise RuntimeError("Dataset was not split for test data, but test data was requested")
+            return None
+        if self.__test is None:
+            print("Loading test data ({} Scenes)".format(self.test_range[1] - self.test_range[0]))
+            self.__test = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts,
+                                     self.files_per_batch, self.indices[self.test_range[0]:self.test_range[1]],
+                                     self.description, self.shuffle, self.augment)
+        return self.__test
+
+    # ------------------------------------------------------------------------------------------------
+    def _get_ranges(self, num_files, val_split, test_split):
+        train_range = (0, num_files - int(num_files * (val_split + test_split)))
+        val_range = (train_range[1], num_files - int(num_files * (test_split)))
+        test_range = (val_range[1], num_files)
+        return train_range, val_range, test_range
 
 
 #------------------------------------------------------------------------------------------------
@@ -256,104 +344,6 @@ class DataSubSet(object):
     def length(self):
         return self.num_frames
 
-#================================================
-class DataSet(object):
-    """ Data set can contain multple data blocks of different types. E.g. velocities, pressures and levelsets"""
-
-    #------------------------------------------------------------------------------------------------
-    def __init__(self):
-        self.__train = None
-        self.__val = None
-        self.__test = None
-
-    #------------------------------------------------------------------------------------------------
-    def load(self, path="", name="", blocks=["pressure","velocity", "density"], norm_factors={}, norm_shifts={}, files_per_batch=0, shuffle=False, validation_split=0.1, test_split=0.1, augment=False):
-        """ 
-        ## load 
-        load a dataset from a directory containing a description.json and subdirectories with serialized grids.
-        * __path__: specify the path to the dataset
-        * __name__: specify the name of the dataset to load. will try to find in surrounding directories
-        * __blocks__: exclude/ add grid types to load
-        * __norm_factors__: a dict containing block names as keys and normalisation factors as values
-        * __files_per_batch__: number of elements to load on next call
-        """
-        # get the directory of the dataset, and load the description
-        self.dataset_root = self._get_dataset_root(path=path, name=name)
-        with open(self.dataset_root + "/description.json", 'r') as f:
-            description = json.load(f)
-        self.description = description
-
-        # initialize the batch loading behaviour
-        self.block_names = [block for block in blocks if block in self.description["grids"]]
-        self.num_files = len(glob.glob(self.dataset_root + "/" + self.description["grids"][0] + "/*.npz"))
-        assert self.num_files != 0, ("No .npz were found in the dataset location")
-        if self.num_files < self.description["num_scenes"]:
-            print("Warning: the dataset is incomplete")
-        self.files_per_batch = files_per_batch
-        self.norm_factors = norm_factors
-        self.norm_shifts = norm_shifts
-        
-        # build index list that enables shuffling of the dataset
-        self.indices = np.arange(start=0, stop=self.num_files)
-        self.shuffle = shuffle
-        self.augment = augment
-        
-        # split the dataset into train, val and test
-        self.train_range, self.val_range, self.test_range = self._get_ranges(self.num_files, validation_split, test_split)
-        if self.train_range[0] == self.train_range[1]:
-            print("[WARNING] Dataset was not split for training data")
-        if self.val_range[0] == self.val_range[1]:
-            print("[WARNING] Dataset was not split for validation data")
-        if self.test_range[0] == self.test_range[1]:
-            print("[WARNING] Dataset was not split for test data")
-
-    @property
-    def train(self):
-        if self.train_range[0] == self.train_range[1]:
-            raise RuntimeError("Dataset was not split for training data, but training data was requested")
-            return None
-        if self.__train is None:
-            print("Loading training data ({} Scenes)".format(self.train_range[1]-self.train_range[0]))
-            self.__train = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts, self.files_per_batch, self.indices[self.train_range[0]:self.train_range[1]], self.description, self.shuffle, self.augment)
-        return self.__train
-
-    @property
-    def val(self):
-        if self.val_range[0] == self.val_range[1]:
-            raise RuntimeError("Dataset was not split for validation data, but validation data was requested")
-            return None
-        if self.__val is None:
-            print("Loading validation data ({} Scenes)".format(self.val_range[1]-self.val_range[0]))
-            self.__val = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts, self.files_per_batch, self.indices[self.val_range[0]:self.val_range[1]], self.description, self.shuffle, self.augment)
-        return self.__val
-
-    @property
-    def test(self):
-        if self.test_range[0] == self.test_range[1]:
-            raise RuntimeError("Dataset was not split for test data, but test data was requested")
-            return None
-        if self.__test is None:
-            print("Loading test data ({} Scenes)".format(self.test_range[1]-self.test_range[0]))
-            self.__test = DataSubSet(self.dataset_root, self.block_names, self.norm_factors, self.norm_shifts, self.files_per_batch, self.indices[self.test_range[0]:self.test_range[1]], self.description, self.shuffle, self.augment)
-        return self.__test
-
-    #------------------------------------------------------------------------------------------------
-    def _get_dataset_root(self, path="", name=""):
-        assert name or path, ("Must provide either a path to the dataset or the name of the dataset, in which case load will try to find the dataset")
-        if name:
-            dataset_root = filesystem.find_directory("datasets") + "/" + name
-        if path:
-            dataset_root = path
-        #print("Loading dataset from {}".format(dataset_root))
-        assert os.path.isfile(dataset_root + "/description.json"), ("The dataset does not contain a description.json")
-        return dataset_root
-
-    #------------------------------------------------------------------------------------------------
-    def _get_ranges(self, num_files, val_split, test_split):
-        train_range = (0, num_files - int(num_files * (val_split + test_split)))
-        val_range = (train_range[1], num_files - int(num_files * (test_split)))
-        test_range = (val_range[1], num_files)
-        return train_range, val_range, test_range
 
 #================================================
 class DataBlock(object):
@@ -363,7 +353,7 @@ class DataBlock(object):
     def __init__(self, data, scene_size, version, seed, normalization_factor=1.0, normalization_shift=0.0, creation_date=None):
         """ Use the 'from_data' or 'from_file' methods to create a data block instead of the default constructor """
         assert data is not None, ("Must provide data.")
-        self.data = data
+        self.__data = data
         self._normalization_factor = normalization_factor
         self._normalization_shift = normalization_shift
         self.test_split = 0.1
@@ -375,11 +365,15 @@ class DataBlock(object):
 
     #------------------------------------------------------------------------------------------------
     def __getitem__(self, key):
-        return self.data[self.permutation[key]]
+        return self.__data[self.permutation[key]]
 
     #------------------------------------------------------------------------------------------------
     def __call__(self):
-        return self.data[self.permutation]
+        return self.__data[self.permutation]
+
+    @property
+    def data(self):
+        return self.__data[self.permutation]
 
     #------------------------------------------------------------------------------------------------
     def permute(self, permutation):
@@ -474,9 +468,9 @@ class DataBlock(object):
             "creation_date": self.creation_date,
             "seed": self.seed
         }
-        np.savez_compressed(file_path, data=self.data, header=header)
+        np.savez_compressed(file_path, data=self.__data, header=header)
         file_path = path.resolve()
-        print("Saved data block {} to file {}".format(self.data.shape, file_path))
+        print("Saved data block {} to file {}".format(self.__data.shape, file_path))
 
     #------------------------------------------------------------------------------------------------
     def normalize(self, shift = 0.0, factor = None, percentile = None, max = False, verbose=True, std= None):
@@ -484,7 +478,7 @@ class DataBlock(object):
         if max:
             if verbose:
                 print("Normalizing with maximum value", end=' ')
-            self._normalization_factor = np.max(self.data)
+            self._normalization_factor = np.max(self.__data)
         elif factor is not None:
             if verbose:
                 print("Normalizing with factor.", end=' ')
@@ -500,13 +494,13 @@ class DataBlock(object):
         if verbose:
             print(" Factor: {} Shift: {}".format(self._normalization_factor, self._normalization_shift))
 
-        self.data += self._normalization_shift
-        self.data /= self._normalization_factor
+        self.__data += self._normalization_shift
+        self.__data /= self._normalization_factor
     
     #------------------------------------------------------------------------------------------------
     def denormalize(self):
-        self.data *= self._normalization_factor
-        self.data -= self.normalization_shift
+        self.__data *= self._normalization_factor
+        self.__data -= self.normalization_shift
         self._normalization_factor = 1.0
         self._normalization_shift = 0.0
 
@@ -526,28 +520,28 @@ class DataBlock(object):
     @property
     def length(self):
         """ the number of fields in the data block """
-        return self.data.shape[0]
+        return self.__data.shape[0]
 
     #------------------------------------------------------------------------------------------------
     @property
     def shape(self):
         """ shape of the elements in the data block """
-        return self.data[0].shape
+        return self.__data[0].shape
 
     #------------------------------------------------------------------------------------------------
     def mask_boundary(self, width):
-        self.data = self.data[:,width:-width, width:-width, width:-width]
+        self.__data = self.__data[:, width:-width, width:-width, width:-width]
 
     #------------------------------------------------------------------------------------------------
     def print_data_properties(self):
-        average = np.average(self.data)
-        max_val = np.max(self.data)
-        min_val = np.min(self.data)
+        average = np.average(self.__data)
+        max_val = np.max(self.__data)
+        min_val = np.min(self.__data)
         print("\tMin: {}".format(min_val))
         print("\tMax: {}".format(max_val))
         print("\tAvg: {}".format(average))
-        print("\tMean: {}".format(np.mean(self.data)))
-        print("\tSTD: {}".format(np.std(self.data)))
+        print("\tMean: {}".format(np.mean(self.__data)))
+        print("\tSTD: {}".format(np.std(self.__data)))
 
 
 if __name__ == "__main__":

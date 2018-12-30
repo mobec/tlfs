@@ -131,8 +131,8 @@ class VGG(Network):
 
         self.model = k.models.Model(inputs=x, outputs=y)
 
-        vgg19 = k.models.load("/home/mob/Models/vgg19/model.h5")#k.applications.vgg19.VGG19(include_top=False, weights='imagenet', input_tensor=None, input_shape=self.input_shape, pooling=None, classes=1000)
-        vgg19_weights = vgg19.get_weights()
+        vgg19 = k.applications.vgg19.VGG19(include_top=False, weights='imagenet', input_tensor=None, input_shape=self.input_shape, pooling=None, classes=1000)
+        vgg19_weights = vgg19.get_weights()[:10]
 
         for i in range(len(vgg19_weights) // 2):
             weights = vgg19_weights[i*2]
@@ -160,21 +160,21 @@ class VGG(Network):
 
         model_layer_idx = 0
         vgg19_layer_idx = 0
-        # encoder weights
-        for i in range(5):
-            # search for the next conv2d layer
-            while not self.model.layers[model_layer_idx].get_weights():
-                model_layer_idx += 1
-            # set weights from vgg
-            weights = vgg19_weights[vgg19_layer_idx]
-            print(weights.shape)
-            # weights = weights / vgg_layer_scales[i]
-            biases = vgg19_weights[vgg19_layer_idx + 1]
-            #biases = biases / np.sum(biases)
-            conv2d_weights = [weights, biases]
-            self.model.layers[model_layer_idx].set_weights(conv2d_weights)
-            vgg19_layer_idx += 2
-            model_layer_idx += 1
+        # # encoder weights
+        # for i in range(5):
+        #     # search for the next conv2d layer
+        #     while not self.model.layers[model_layer_idx].get_weights():
+        #         model_layer_idx += 1
+        #     # set weights from vgg
+        #     weights = vgg19_weights[vgg19_layer_idx]
+        #     print(weights.shape)
+        #     # weights = weights / vgg_layer_scales[i]
+        #     biases = vgg19_weights[vgg19_layer_idx + 1]
+        #     #biases = biases / np.sum(biases)
+        #     conv2d_weights = [weights, biases]
+        #     self.model.layers[model_layer_idx].set_weights(conv2d_weights)
+        #     vgg19_layer_idx += 2
+        #     model_layer_idx += 1
 
         # decoder weights
         model_layer_idx = len(self.model.layers) - 1
@@ -238,4 +238,3 @@ class VGG(Network):
 
     def predict(self, x, batch_size):
         return self.model.predict(x, batch_size=batch_size)
-
