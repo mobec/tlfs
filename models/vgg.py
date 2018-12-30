@@ -131,11 +131,11 @@ class VGG(Network):
 
         self.model = k.models.Model(inputs=x, outputs=y)
 
-        vgg19 = k.applications.vgg19.VGG19(include_top=False, weights='imagenet', input_tensor=None, input_shape=self.input_shape, pooling=None, classes=1000)
-        vgg19_weights = vgg19.get_weights()[:10]
+        # vgg19 = k.applications.vgg19.VGG19(include_top=False, weights='imagenet', input_tensor=None, input_shape=self.input_shape, pooling=None, classes=1000)
+        # vgg19_weights = vgg19.get_weights()[:10]
 
-        model_layer_idx = 0
-        vgg19_layer_idx = 0
+        # model_layer_idx = 0
+        # vgg19_layer_idx = 0
         # # encoder weights
         # for i in range(5):
         #     # search for the next conv2d layer
