@@ -131,7 +131,7 @@ class VGG(Network):
 
         self.model = k.models.Model(inputs=x, outputs=y)
 
-        vgg19 = k.applications.vgg19.VGG19(include_top=False, weights='imagenet', input_tensor=None, input_shape=self.input_shape, pooling=None, classes=1000)
+        vgg19 = k.models.load("/home/mob/Models/vgg19/model.h5")#k.applications.vgg19.VGG19(include_top=False, weights='imagenet', input_tensor=None, input_shape=self.input_shape, pooling=None, classes=1000)
         vgg19_weights = vgg19.get_weights()
 
         for i in range(len(vgg19_weights) // 2):
