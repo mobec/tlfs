@@ -134,30 +134,6 @@ class VGG(Network):
         vgg19 = k.applications.vgg19.VGG19(include_top=False, weights='imagenet', input_tensor=None, input_shape=self.input_shape, pooling=None, classes=1000)
         vgg19_weights = vgg19.get_weights()[:10]
 
-        for i in range(len(vgg19_weights) // 2):
-            weights = vgg19_weights[i*2]
-            biases = vgg19_weights[i*2 + 1]
-            print("Weight sum: {}".format(np.sum(weights)))
-            print("Bias sum: {}".format(np.sum(biases)))
-
-        vgg_layer_scales = [
-            1.000021775577029,
-            0.7820745278554599,
-            4.506298490266108,
-            1.520877112218829,
-            1.7411676435890928,
-            0.7973368912842906,
-            1.1258171358619091,
-            1.5871279482567102,
-            2.211062450971975,
-            0.8242409135760195,
-            0.7673000726826673,
-            0.5574201626639431,
-            0.5702032871407169,
-            0.4819161555954472,
-            0.4929815244100853
-        ]
-
         model_layer_idx = 0
         vgg19_layer_idx = 0
         # # encoder weights
@@ -176,22 +152,22 @@ class VGG(Network):
         #     vgg19_layer_idx += 2
         #     model_layer_idx += 1
 
-        # decoder weights
-        model_layer_idx = len(self.model.layers) - 1
-        vgg19_layer_idx = 0
-        for i in range(5):
-            # search for the next conv2d transposed layer
-            while not self.model.layers[model_layer_idx].get_weights():
-                model_layer_idx -= 1
-            # set weights from vgg
-            weights = vgg19_weights[vgg19_layer_idx]
-            # weights = weights / vgg_layer_scales[i]
-            biases = vgg19_weights[vgg19_layer_idx + 1][:self.model.layers[model_layer_idx].get_weights()[1].shape[0]]
-            #biases = biases / np.sum(biases)
-            conv2d_T_weights = [weights, biases]
-            self.model.layers[model_layer_idx].set_weights(conv2d_T_weights)
-            vgg19_layer_idx += 2
-            model_layer_idx -= 1
+        # # decoder weights
+        # model_layer_idx = len(self.model.layers) - 1
+        # vgg19_layer_idx = 0
+        # for i in range(5):
+        #     # search for the next conv2d transposed layer
+        #     while not self.model.layers[model_layer_idx].get_weights():
+        #         model_layer_idx -= 1
+        #     # set weights from vgg
+        #     weights = vgg19_weights[vgg19_layer_idx]
+        #     # weights = weights / vgg_layer_scales[i]
+        #     biases = vgg19_weights[vgg19_layer_idx + 1][:self.model.layers[model_layer_idx].get_weights()[1].shape[0]]
+        #     #biases = biases / np.sum(biases)
+        #     conv2d_T_weights = [weights, biases]
+        #     self.model.layers[model_layer_idx].set_weights(conv2d_T_weights)
+        #     vgg19_layer_idx += 2
+        #     model_layer_idx -= 1
 
     def _compile_model(self):
         self.model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
