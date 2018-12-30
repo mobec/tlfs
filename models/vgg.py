@@ -161,7 +161,7 @@ class VGG(Network):
         model_layer_idx = 0
         vgg19_layer_idx = 0
         # encoder weights
-        for i in range(6):
+        for i in range(5):
             # search for the next conv2d layer
             while not self.model.layers[model_layer_idx].get_weights():
                 model_layer_idx += 1
@@ -179,7 +179,7 @@ class VGG(Network):
         # decoder weights
         model_layer_idx = len(self.model.layers) - 1
         vgg19_layer_idx = 0
-        for i in range(6):
+        for i in range(5):
             # search for the next conv2d transposed layer
             while not self.model.layers[model_layer_idx].get_weights():
                 model_layer_idx -= 1
