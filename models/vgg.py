@@ -39,8 +39,8 @@ class VGG(Network):
     def _init_vars(self, **kwargs):
         self.init_func = "glorot_normal"
         self.adam_epsilon = None #1e-8 # 1e-3
-        self.adam_learning_rate = 0.0001 # higher values tend to overshoot in the beginning
-        self.adam_weight_decay = 0.000#1e-5
+        self.adam_learning_rate = 0.00001 # higher values tend to overshoot in the beginning
+        self.adam_weight_decay = 0.005#1e-5
         self.input_shape = kwargs.get("input_shape", (64, 64, 64, 1))
         self.loss = "mse"
         self.metrics = ["mae"]
