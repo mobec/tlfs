@@ -29,15 +29,15 @@ class ConvolutionOrthogonality(keras.regularizers.Regularizer):
         ks = tf.split(kernel, kernel.shape[-1], axis=-1)
         result = K.variable(0.0, dtype="float32", name="result_accumulator")
         for k in ks:
-            #k = K.squeeze(k, -1)
+            # k = K.squeeze(k, -1)
             # 1.) Flatten the weight matrix
             w = K.flatten(k)
+            n = w.shape[0].value
             # 2.) construct a square matrix consisting of w repeated in the columns and clear the diagonal
-            o = K.squeeze(K.repeat(K.expand_dims(w, -1), w.shape[0]), -1) - K.eye(w.shape[0].value) * w
+            W = K.squeeze(K.repeat(K.expand_dims(w, -1), w.shape[0]), -1)
             # 3.) the regularizer is the L1 norm of the product divided by two, to account for double entries from the
             # symmetric matrix o
-            result += (self.factor / 2.0) * (
-                        K.sum(K.abs(K.dot(K.expand_dims(w, 0), o))) + K.abs(tf.norm(w, ord=2) - 1.0))
+            result += self.factor * n * K.abs(K.sum(K.abs(K.dot(W, K.expand_dims(w, -1)))) - 1.0)
         return result
 
     def get_config(self):
