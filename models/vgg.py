@@ -83,7 +83,7 @@ class VGG(Network):
         h = k.layers.MaxPool2D((2, 2))(h)
 
         #----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True)(h)
+        h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True, kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Activation('relu')(h)
         # # ----------------------------------------------------------------------------------
         # h = k.layers.Conv2D(256, (3, 3), padding='same', trainable=True)(h)
@@ -106,7 +106,7 @@ class VGG(Network):
         # h = k.layers.Conv2DTranspose(256, (3, 3), padding='same')(h)
         # h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same')(h)
+        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Activation('relu')(h)
 
         #----------------------------------------------------------------------------------
