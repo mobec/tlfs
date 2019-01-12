@@ -39,6 +39,7 @@ def train_vgg19(dataset_path, model_path, epochs, ortho=False, ortho_factor=0.1)
 
     images = np.concatenate(images).astype(np.float32)
     labels = np.concatenate(labels)
+    labels -= 1
 
     print(labels.shape)
 
