@@ -182,8 +182,7 @@ class VGG19(Network):
                 x=images,
                 y=labels,
                 validation_split=0.1,
-                epochs=epochs,
-                max_queue_size=100
+                epochs=epochs
             )
         except KeyboardInterrupt:
             print("Interrupted by user")
