@@ -174,6 +174,8 @@ class VGG19(Network):
             return None
 
         images, labels = kwargs["data"]
+        labels = k.utils.to_categorical(labels, num_classes=1000)
+
         batch_size = kwargs.get("batch_size", 32)
         augment = kwargs.get("augment", False)
         hist = None

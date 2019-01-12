@@ -40,6 +40,8 @@ def train_vgg19(dataset_path, model_path, epochs, ortho=False, ortho_factor=0.1)
     images = np.concatenate(images).astype(np.float32)
     labels = np.concatenate(labels)
 
+    print(labels.shape)
+
     #print(images.shape)
     img_dim = int(math.sqrt(images.shape[-1] / 3))
     images.resize((images.shape[0], img_dim, img_dim, 3))
