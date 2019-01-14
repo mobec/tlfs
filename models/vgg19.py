@@ -69,41 +69,49 @@ class VGG19(Network):
         h = k.layers.Conv2D(64, (3, 3),
                           activation='relu',
                           padding='same',
-                          name='block1_conv1')(x)
+                          name='block1_conv1',
+                          kernel_regularizer=self.kernel_regularizer)(x)
         h = k.layers.Conv2D(64, (3, 3),
                           activation='relu',
                           padding='same',
-                          name='block1_conv2')(h)
+                          name='block1_conv2',
+                          kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block1_pool')(h)
 
         # Block 2
         h = k.layers.Conv2D(128, (3, 3),
                           activation='relu',
                           padding='same',
-                          name='block2_conv1')(h)
+                          name='block2_conv1',
+                          kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Conv2D(128, (3, 3),
                           activation='relu',
                           padding='same',
-                          name='block2_conv2')(h)
+                          name='block2_conv2',
+                          kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block2_pool')(h)
 
         # Block 3
         h = k.layers.Conv2D(256, (3, 3),
                           activation='relu',
                           padding='same',
-                          name='block3_conv1')(h)
+                          name='block3_conv1',
+                          kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Conv2D(256, (3, 3),
                           activation='relu',
                           padding='same',
-                          name='block3_conv2')(h)
+                          name='block3_conv2',
+                          kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Conv2D(256, (3, 3),
                           activation='relu',
                           padding='same',
-                          name='block3_conv3')(h)
+                          name='block3_conv3',
+                          kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.Conv2D(256, (3, 3),
                           activation='relu',
                           padding='same',
-                          name='block3_conv4')(h)
+                          name='block3_conv4',
+                          kernel_regularizer=self.kernel_regularizer)(h)
         h = k.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block3_pool')(h)
 
         # Block 4
