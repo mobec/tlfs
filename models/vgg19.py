@@ -100,18 +100,15 @@ class VGG19(Network):
         h = k.layers.Conv2D(256, (3, 3),
                           activation='relu',
                           padding='same',
-                          name='block3_conv2',
-                          kernel_regularizer=self.kernel_regularizer)(h)
+                          name='block3_conv2')(h)
         h = k.layers.Conv2D(256, (3, 3),
                           activation='relu',
                           padding='same',
-                          name='block3_conv3',
-                          kernel_regularizer=self.kernel_regularizer)(h)
+                          name='block3_conv3')(h)
         h = k.layers.Conv2D(256, (3, 3),
                           activation='relu',
                           padding='same',
-                          name='block3_conv4',
-                          kernel_regularizer=self.kernel_regularizer)(h)
+                          name='block3_conv4')(h)
         h = k.layers.MaxPooling2D((2, 2), strides=(2, 2), name='block3_pool')(h)
 
         # Block 4
