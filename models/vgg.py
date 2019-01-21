@@ -65,7 +65,7 @@ class VGG(Network):
         # ----------------------------------------------------------------------------------
         x = k.layers.Input(shape=self.input_shape)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2D(64,  (3, 3), padding='same', trainable=True, kernel_regularizer=self.kernel_regularizer)(x)
+        h = k.layers.Conv2D(64,  (3, 3), padding='same', trainable=True)(x)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
         h = k.layers.Conv2D(64, (3, 3), padding='same', trainable=True, kernel_regularizer=self.kernel_regularizer)(h)
@@ -106,28 +106,28 @@ class VGG(Network):
         # h = k.layers.Conv2DTranspose(256, (3, 3), padding='same')(h)
         # h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
+        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
 
         #----------------------------------------------------------------------------------
         #h = e.layers.InvMaxPool2D((2, 2))(h)
         h = k.layers.UpSampling2D((2, 2))(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
+        h = k.layers.Conv2DTranspose(128, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
+        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
 
         #----------------------------------------------------------------------------------
         #h = e.layers.InvMaxPool2D((2, 2))(h)
         h = k.layers.UpSampling2D((2, 2))(h)
         # ----------------------------------------------------------------------------------
-        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
+        h = k.layers.Conv2DTranspose(64, (3, 3), padding='same')(h)
         h = k.layers.Activation('relu')(h)
         # ----------------------------------------------------------------------------------
-        y = k.layers.Conv2DTranspose(3, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
-        y = k.layers.Conv2DTranspose(3, (3, 3), padding='same', kernel_regularizer=self.kernel_regularizer)(h)
+        y = k.layers.Conv2DTranspose(3, (3, 3), padding='same')(h)
+        y = k.layers.Conv2DTranspose(3, (3, 3), padding='same')(h)
 
         self.model = k.models.Model(inputs=x, outputs=y)
 
